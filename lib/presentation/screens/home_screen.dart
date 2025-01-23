@@ -1,35 +1,43 @@
+// lib/presentation/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/auth_cubit.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-
   @override
   void initState() {
     super.initState();
-      context.read<AuthCubit>().checkTokenValidity();
-
+    context.read<AuthCubit>().checkTokenValidity();
   }
 
   @override
   Widget build(BuildContext context) {
-    final authCubit = BlocProvider.of<AuthCubit>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text('الصفحة الرئيسية'),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.settings), // أيقونة الإعدادات
             onPressed: () {
-              authCubit.logout();
-              Navigator.pushReplacementNamed(context, '/login');
+              // في HomeScreen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider.value(
+                    value:
+                        BlocProvider.of<AuthCubit>(context), // تمرير AuthCubit
+                    child: SettingsScreen(),
+                  ),
+                ),
+              ); // الانتقال إلى شاشة الإعدادات
             },
           ),
         ],
@@ -45,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                
                   _buildGridSection(context),
                 ],
               ),
@@ -53,11 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(context),
     );
   }
-
-
 
   Widget _buildGridSection(BuildContext context) {
     return GridView.count(
@@ -98,38 +102,6 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () {
             Navigator.pushNamed(context, '/problem-solving');
           },
-        ),
-        _buildCard(
-          icon: Icons.settings,
-          title: 'الإعدادات',
-          description: 'إدارة التفضيلات والإعدادات.',
-          onTap: () {
-            Navigator.pushNamed(context, '/settings');
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: _selectedIndex,
-      onTap: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-        if (index == 1) {
-          Navigator.pushNamed(context, '/settings');
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'الرئيسية',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings),
-          label: 'الإعدادات',
         ),
       ],
     );
