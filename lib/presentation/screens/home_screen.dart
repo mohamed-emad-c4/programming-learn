@@ -1,6 +1,7 @@
 // lib/presentation/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart'; // استيراد المكتبة
 import '../cubit/auth_cubit.dart';
 import 'settings_screen.dart';
 
@@ -65,46 +66,60 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildGridSection(BuildContext context) {
     return GridView.count(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      children: [
-        _buildCard(
-          icon: Icons.computer,
-          title: 'أساسيات الكمبيوتر',
-          description: 'تعلم أساسيات الهاردوير والسوفتوير.',
-          onTap: () {
-            Navigator.pushNamed(context, '/fundamentals');
-          },
-        ),
-        _buildCard(
-          icon: Icons.code,
-          title: 'لغة البرمجة',
-          description: 'تعلم بايثون، جافا، وغيرها.',
-          onTap: () {
-            Navigator.pushNamed(context, '/programming');
-          },
-        ),
-        _buildCard(
-          icon: Icons.lightbulb_outline,
-          title: 'تعلم المهارات',
-          description: 'طور التفكير النقدي والإبداع.',
-          onTap: () {
-            Navigator.pushNamed(context, '/skills');
-          },
-        ),
-        _buildCard(
-          icon: Icons.bug_report,
-          title: 'حل المشكلات',
-          description: 'تدرب على بناء المنطق والخوارزميات.',
-          onTap: () {
-            Navigator.pushNamed(context, '/problem-solving');
-          },
-        ),
-      ],
-    );
+  shrinkWrap: true,
+  physics: NeverScrollableScrollPhysics(),
+  crossAxisCount: 2,
+  crossAxisSpacing: 16,
+  mainAxisSpacing: 16,
+  children: [
+    _buildCard(
+      icon: Icons.computer,
+      title: 'أساسيات الكمبيوتر',
+      description: 'تعلم أساسيات الهاردوير والسوفتوير.',
+      onTap: () {
+        Navigator.pushNamed(context, '/fundamentals');
+      },
+    )
+        .animate()
+        .fadeIn(duration: 500.ms, delay: 200.ms)
+        .slideX(begin: -0.5, end: 0, duration: 500.ms),
+    _buildCard(
+      icon: Icons.code,
+      title: 'لغة البرمجة',
+      description: 'تعلم بايثون، جافا، وغيرها.',
+      onTap: () {
+        Navigator.pushNamed(context, '/programming');
+      },
+    )
+        .animate()
+        .fadeIn(duration: 500.ms, delay: 400.ms)
+        .slideX(begin: 0.5, end: 0, duration: 500.ms),
+    _buildCard(
+      icon: Icons.lightbulb_outline,
+      title: 'تعلم المهارات',
+      description: 'طور التفكير النقدي والإبداع.',
+      onTap: () {
+        Navigator.pushNamed(context, '/skills');
+      },
+    )
+        .animate()
+        .fadeIn(duration: 500.ms, delay: 600.ms)
+        .slideY(begin: -0.5, end: 0, duration: 500.ms),
+    _buildCard(
+      icon: Icons.bug_report,
+      title: 'حل المشكلات',
+      description: 'تدرب على بناء المنطق والخوارزميات.',
+      onTap: () {
+        Navigator.pushNamed(context, '/problem-solving');
+      },
+    )
+        .animate()
+        .fadeIn(duration: 500.ms, delay: 800.ms)
+        .slideY(begin: 0.5, end: 0, duration: 500.ms),
+  ],
+);
+  
+  
   }
 
   Widget _buildCard({

@@ -82,4 +82,48 @@ static Future<bool> verifyToken(String token) async {
     return false; // Token is invalid
   }
 }
+
+  static Future<List<Map<String, dynamic>>> getChapters(int languageId) async {
+    try {
+      final url = Uri.parse('$baseUrl/lessons/chapters/?language_id=$languageId');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load chapters: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load chapters: $e');
+    }
+  }
+
+
+  // دالة لجلب الدروس
+  static Future<List<Map<String, dynamic>>> getLessons(int languageId, int chapterNumber, String token) async {
+    try {
+      final url = Uri.parse('$baseUrl/lessons/$languageId/$chapterNumber');
+      final response = await http.get(url, headers: {
+      'Authorization': 'Bearer $token',
+    },);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load lessons: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load lessons: $e');
+    }
+  }
+
+
+
+
+
+
+
+
 }

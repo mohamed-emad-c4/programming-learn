@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:learn_programming/domain/repositories/auth_repository_impl.dart';
+import 'package:learn_programming/presentation/screens/essonsScreen.dart';
+import 'presentation/screens/fundamentals_screen.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/login_screen.dart';
 import 'presentation/cubit/auth_cubit.dart';
@@ -32,8 +34,11 @@ Future<void> setupDependencies() async {
     }
   }
 }
+
 // في main.dart
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -45,7 +50,9 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        initialRoute: GetIt.I.isRegistered<String>(instanceName: 'token') ? '/home' : '/login',
+        initialRoute: GetIt.I.isRegistered<String>(instanceName: 'token')
+            ? '/home'
+            : '/login',
         routes: {
           '/login': (context) => BlocProvider(
                 create: (context) => GetIt.I<AuthCubit>(),
@@ -60,7 +67,18 @@ class MyApp extends StatelessWidget {
                 child: HomeScreen(),
               ),
           '/reset-password': (context) => ResetPasswordScreen(),
-          '/settings': (context) => SettingsScreen(), // AuthCubit متاح هنا
+          '/settings': (context) => SettingsScreen(),
+          '/fundamentals': (context) => FundamentalsScreen(
+                languageId: 0,
+              ),
+          '/lessons': (context) {
+            final args =
+                ModalRoute.of(context)!.settings.arguments as Map<String, int>;
+            return LessonsScreen(
+              languageId: args['languageId']!,
+              chapterNumber: args['chapterNumber']!,
+            );
+          },
         },
       ),
     );
