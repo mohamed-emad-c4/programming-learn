@@ -16,15 +16,16 @@ class CourseScreen extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'YourCustomFont', // Add a custom font if available
               fontWeight: FontWeight.bold,
+              fontSize: 20, // Increased font size
             ),
           ),
           backgroundColor: Colors.blue.shade700,
           centerTitle: true,
-          elevation: 4, // Add shadow
+          elevation: 8, // Increased shadow
           flexibleSpace: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue.shade800, Colors.blue.shade600],
+                colors: [Colors.blue.shade900, Colors.blue.shade600],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -37,7 +38,7 @@ class CourseScreen extends StatelessWidget {
               onRefresh: () async {
                 context.read<CourseCubit>().fetchCourses();
               },
-              child: _buildCourseList(state, context), // Pass context here
+              child: _buildCourseList(state, context),
             );
           },
         ),
@@ -49,7 +50,7 @@ class CourseScreen extends StatelessWidget {
     if (state is CourseLoading) {
       return _buildShimmerLoading();
     } else if (state is CourseError) {
-      return _buildErrorState(context, state); // Pass context here
+      return _buildErrorState(context, state);
     } else if (state is CourseLoaded) {
       if (state.courses.isEmpty) {
         return _buildEmptyState();
@@ -177,15 +178,14 @@ class CourseScreen extends StatelessWidget {
 
   Widget _buildCourseCard(BuildContext context, Map<String, dynamic> course) {
     return GestureDetector(
-    onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => ChapterScreen(courseId: course['id']),
-    ),
-  );
-},
-
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChapterScreen(courseId: course['id']),
+          ),
+        );
+      },
       child: Card(
         elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -193,7 +193,7 @@ class CourseScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ✅ Course Image with Gradient Overlay
+            // Course Image with Gradient Overlay
             Container(
               height: 120,
               decoration: BoxDecoration(
@@ -236,7 +236,7 @@ class CourseScreen extends StatelessWidget {
               ),
             ),
 
-            // ✅ Course Info
+            // Course Info
             Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -253,7 +253,7 @@ class CourseScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  // ✅ Responsive Category & Language Tags
+                  // Responsive Category & Language Tags
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,

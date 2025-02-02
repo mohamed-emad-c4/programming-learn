@@ -12,13 +12,35 @@ class ChapterScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => CourseCubit()..fetchCourseById(courseId),
       child: Scaffold(
-        appBar: AppBar(title: Text('تفاصيل الدورة')),
+        appBar: AppBar(
+          title: const Text('تفاصيل الدورة', style: TextStyle(fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.blueAccent,
+          centerTitle: true,
+          elevation: 4,
+        ),
         body: BlocBuilder<CourseCubit, CourseState>(
           builder: (context, state) {
             if (state is CourseLoading) {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             } else if (state is CourseError) {
-              return Center(child: Text(state.message, style: TextStyle(color: Colors.red)));
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => context.read<CourseCubit>().fetchCourseById(courseId),
+                      child: const Text('إعادة المحاولة'),
+                    ),
+                  ],
+                ),
+              );
             } else if (state is SpecificCourseLoaded) {
               final course = state.course;
               final chapters = state.chapters;
@@ -27,68 +49,86 @@ class ChapterScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ✅ Course Image
-                    if (course['image_url'] != null)
-                      Container(
-                        width: double.infinity,
-                        height: 200,
+                    // ✅ Course Image with Fallback
+                    Container(
+                      width: double.infinity,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(course['image_url'] ?? ''),
+                          fit: BoxFit.cover,
+                          onError: (_, __) => const AssetImage('assets/images/fallback.jpg'),
+                        ),
+                      ),
+                      child: Container(
                         decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(course['image_url']),
-                            fit: BoxFit.cover,
+                          gradient: LinearGradient(
+                            colors: [Colors.black54, Colors.transparent],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
                           ),
                         ),
-                      )
-                    else
-                      Container(
-                        width: double.infinity,
-                        height: 200,
-                        color: Colors.grey[300],
-                        child: Center(child: Icon(Icons.image, size: 80, color: Colors.grey)),
+                        alignment: Alignment.bottomLeft,
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          course['name'],
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
+                    ),
 
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ✅ Course Info
-                          Text(
-                            course['name'],
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blue),
-                          ),
-                          SizedBox(height: 8),
+                          // ✅ Course Description
                           Text(
                             course['description'] ?? 'لا يوجد وصف',
-                            style: TextStyle(fontSize: 16),
+                            style: const TextStyle(fontSize: 16, color: Colors.black87),
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 20),
 
-                          Divider(),
+                          const Divider(),
 
                           // ✅ Chapters List
-                          Text(
-                            'الفصول',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
+                          const Text(
+                            '📚 الفصول',
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
                           ),
+                          const SizedBox(height: 10),
                           ListView.builder(
                             shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
+                            physics: const NeverScrollableScrollPhysics(),
                             itemCount: chapters.length,
                             itemBuilder: (context, index) {
                               final chapter = chapters[index];
                               return Card(
-                                elevation: 3,
-                                margin: EdgeInsets.symmetric(vertical: 8),
+                                elevation: 4,
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 child: ListTile(
+                                  contentPadding: const EdgeInsets.all(16),
+                                  leading: CircleAvatar(
+                                    backgroundColor: Colors.blueAccent,
+                                    child: Text(
+                                      '${chapter['order_number']}',
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
                                   title: Text(
                                     chapter['title'],
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
                                   ),
-                                  subtitle: Text(chapter['content']),
-                                  leading: CircleAvatar(
-                                    child: Text('${chapter['order_number']}'),
-                                    backgroundColor: Colors.blueAccent,
+                                  subtitle: Text(
+                                    chapter['content'] ?? 'لا يوجد محتوى',
+                                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                                   ),
                                   onTap: () {
                                     // TODO: Navigate to lessons screen
@@ -105,7 +145,7 @@ class ChapterScreen extends StatelessWidget {
               );
             }
 
-            return Center(child: Text('لا توجد بيانات متاحة.'));
+            return const Center(child: Text('لا توجد بيانات متاحة.'));
           },
         ),
       ),
