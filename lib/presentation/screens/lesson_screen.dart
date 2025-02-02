@@ -263,7 +263,7 @@ class _LessonScreenState extends State<LessonScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                     "$index. ${lesson['title']?.toString() ?? 'No title available.'}",
+                     "${index+1}. ${lesson['title']?.toString() ?? 'No title available.'}",
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
