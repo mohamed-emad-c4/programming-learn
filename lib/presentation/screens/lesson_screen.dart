@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shimmer/shimmer.dart';
 
 class LessonScreen extends StatefulWidget {
   final int chapterId;
@@ -13,6 +14,8 @@ class LessonScreen extends StatefulWidget {
 
 class _LessonScreenState extends State<LessonScreen> {
   late Future<List<Map<String, dynamic>>> _lessons;
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _filteredLessons = [];
 
   Future<List<Map<String, dynamic>>> fetchLessons(int chapterId) async {
     final response = await http.get(
@@ -28,6 +31,15 @@ class _LessonScreenState extends State<LessonScreen> {
     }
   }
 
+  void _filterLessons(String query, List<Map<String, dynamic>> lessons) {
+    setState(() {
+      _filteredLessons = lessons
+          .where((lesson) =>
+              lesson['title'].toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -38,12 +50,48 @@ class _LessonScreenState extends State<LessonScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Lessons',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
+        title: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _lessons,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Text(
+                'Lessons',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+              );
+            } else if (snapshot.hasError || !snapshot.hasData) {
+              return const Text(
+                'Lessons',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+              );
+            } else {
+              final lessonCount = snapshot.data!.length;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Lessons',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
+                  ),
+                  Text(
+                    '$lessonCount ${lessonCount == 1 ? 'lesson' : 'lessons'} available',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ],
+              );
+            }
+          },
         ),
         backgroundColor: Colors.blueAccent,
         elevation: 0,
@@ -57,84 +105,138 @@ class _LessonScreenState extends State<LessonScreen> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: LessonSearchDelegate(_filteredLessons),
+              );
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _lessons,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-              ),
-            );
+            return _buildShimmerLoading();
           } else if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: Colors.red,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error: ${snapshot.error}',
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _lessons = fetchLessons(widget.chapterId);
-                      });
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
+            return _buildErrorState(snapshot.error.toString());
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No lessons available.',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return _buildEmptyState();
           } else {
             final lessons = snapshot.data!;
-            return ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              itemCount: lessons.length,
-              itemBuilder: (context, index) {
-                final lesson = lessons[index];
-                return _buildLessonCard(context, lesson);
+            _filteredLessons = lessons;
+            return RefreshIndicator(
+              onRefresh: () async {
+                setState(() {
+                  _lessons = fetchLessons(widget.chapterId);
+                });
               },
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                itemCount: _filteredLessons.length,
+                itemBuilder: (context, index) {
+                  final lesson = _filteredLessons[index];
+                  return _buildLessonCard(context, lesson,index);
+                },
+              ),
             );
           }
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Add a new lesson
+        },
+        backgroundColor: Colors.blueAccent,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        itemCount: 6,
+        itemBuilder: (context, index) {
+          return Card(
+            elevation: 4,
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              height: 120,
+              color: Colors.white,
+            ),
+          );
         },
       ),
     );
   }
 
-  Widget _buildLessonCard(BuildContext context, Map<String, dynamic> lesson) {
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            color: Colors.red,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Error: $error',
+            style: const TextStyle(
+              color: Colors.red,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _lessons = fetchLessons(widget.chapterId);
+              });
+            },
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.search_off,
+            size: 64,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No lessons available.',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLessonCard(BuildContext context, Map<String, dynamic> lesson,int index) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Card(
@@ -145,13 +247,12 @@ class _LessonScreenState extends State<LessonScreen> {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () {
-            // Navigate to lesson details page if needed
+            // Navigate to lesson details page
           },
           borderRadius: BorderRadius.circular(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Lesson Image (if available)
               if (lesson['image_url'] != null)
                 Container(
                   height: 150,
@@ -167,9 +268,8 @@ class _LessonScreenState extends State<LessonScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Lesson Title
                     Text(
-                      lesson['title'],
+                     "$index. ${lesson['title']?.toString() ?? 'No title available.'}",
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -177,7 +277,6 @@ class _LessonScreenState extends State<LessonScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Lesson Content (Truncated)
                     Text(
                       lesson['content']?.toString() ?? 'No content available.',
                       maxLines: 2,
@@ -188,7 +287,6 @@ class _LessonScreenState extends State<LessonScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Tags (if available)
                     if (lesson['tags'] != null)
                       Wrap(
                         spacing: 8,
@@ -221,6 +319,67 @@ class _LessonScreenState extends State<LessonScreen> {
           color: Colors.blueAccent,
         ),
       ),
+    );
+  }
+}
+
+class LessonSearchDelegate extends SearchDelegate<String> {
+  final List<Map<String, dynamic>> lessons;
+
+  LessonSearchDelegate(this.lessons);
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null!);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final results = lessons
+        .where((lesson) =>
+            lesson['title'].toLowerCase().contains(query.toLowerCase()))
+        .toList();
+    return _buildSearchResults(results);
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final suggestions = lessons
+        .where((lesson) =>
+            lesson['title'].toLowerCase().contains(query.toLowerCase()))
+        .toList();
+    return _buildSearchResults(suggestions);
+  }
+
+  Widget _buildSearchResults(List<Map<String, dynamic>> results) {
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final lesson = results[index];
+        return ListTile(
+          title: Text(lesson['title']),
+          onTap: () {
+            close(context, lesson['title']);
+          },
+        );
+      },
     );
   }
 }
