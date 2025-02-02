@@ -41,6 +41,7 @@ dependencies:
   shared_preferences: ^2.3.5
   flutter_animate: ^4.5.2
   shimmer: ^3.0.0
+  youtube_player_flutter: ^9.1.1
 
 dev_dependencies:
   flutter_test:

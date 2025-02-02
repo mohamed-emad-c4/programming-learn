@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learn_programming/presentation/screens/view_lesson_screen.dart';
 import 'dart:convert';
 import 'package:shimmer/shimmer.dart';
 
@@ -19,7 +20,7 @@ class _LessonScreenState extends State<LessonScreen> {
 
   Future<List<Map<String, dynamic>>> fetchLessons(int chapterId) async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.2:8000/api/lessons/$chapterId/lessons'),
+      Uri.parse('http://192.168.1.2:8000/api/lessons/chapter/$chapterId'),
       headers: {'Content-Type': 'application/json'},
     );
 
@@ -241,7 +242,13 @@ class _LessonScreenState extends State<LessonScreen> {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () {
-            // Navigate to lesson details page
+           Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => ViewLessonScreen(lessonId: lesson['lesson_id'],), // Pass the actual chapter ID
+  ),
+);
+
           },
           borderRadius: BorderRadius.circular(16),
           child: Column(
