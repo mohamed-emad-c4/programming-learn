@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/course_cubit.dart';
+import 'lesson_screen.dart';
 
 class ChapterScreen extends StatelessWidget {
   final int courseId;
@@ -131,6 +132,12 @@ class ChapterScreen extends StatelessWidget {
                                     style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                                   ),
                                   onTap: () {
+                                    Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => LessonScreen(chapterId: chapter['id']), // Replace 1 with the actual chapter ID
+  ),
+);
                                     // TODO: Navigate to lessons screen
                                   },
                                 ),
