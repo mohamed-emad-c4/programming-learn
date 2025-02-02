@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'أساسيات الكمبيوتر',
       description: 'تعلم أساسيات الهاردوير والسوفتوير.',
       onTap: () {
-        Navigator.pushNamed(context, '/fundamentals');
+        Navigator.pushNamed(context, '/course-detail');
       },
     )
         .animate()
@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'لغة البرمجة',
       description: 'تعلم بايثون، جافا، وغيرها.',
       onTap: () {
-        Navigator.pushNamed(context, '/programming');
+        Navigator.pushNamed(context, '/courses');
       },
     )
         .animate()

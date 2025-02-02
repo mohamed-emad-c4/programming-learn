@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.32:8000';
+  static const String baseUrl = 'http://192.168.1.2:8000/api';
 
   // تسجيل حساب جديد
   static Future<Map<String, dynamic>> register({
@@ -14,7 +14,7 @@ class ApiService {
     required String password,
     required String role,
   }) async {
-    final url = Uri.parse('$baseUrl/register');
+    final url = Uri.parse('$baseUrl/users/register');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -42,7 +42,7 @@ class ApiService {
     required String username,
     required String password,
   }) async {
-    final url = Uri.parse('$baseUrl/login');
+    final url = Uri.parse('$baseUrl/users/login');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -68,38 +68,23 @@ class ApiService {
 // lib/data/datasources/api_service.dart
 // lib/data/datasources/api_service.dart
 static Future<bool> verifyToken(String token) async {
-  final url = Uri.parse('$baseUrl/verify-token'); // Replace with your endpoint
+  final url = Uri.parse('$baseUrl/users/verify-token'); // Ensure correct path
+
   final response = await http.get(
     url,
     headers: {
-      'Authorization': 'Bearer $token',
+      'Authorization': 'Bearer $token', // Token in header
     },
   );
 
   if (response.statusCode == 200) {
-    return true; // Token is valid
+    final data = jsonDecode(response.body);
+    return data['is_valid']; // Returns true if valid
   } else {
     return false; // Token is invalid
   }
 }
-
-  static Future<List<Map<String, dynamic>>> getChapters(int languageId) async {
-    try {
-      final url = Uri.parse('$baseUrl/lessons/chapters/?language_id=$languageId');
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.cast<Map<String, dynamic>>();
-      } else {
-        throw Exception('Failed to load chapters: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Failed to load chapters: $e');
-    }
-  }
-
-
+ 
   // دالة لجلب الدروس
   static Future<List<Map<String, dynamic>>> getLessons(int languageId, int chapterNumber, String token) async {
     try {
@@ -119,6 +104,62 @@ static Future<bool> verifyToken(String token) async {
     }
   }
 
+static Future<List<Map<String, dynamic>>> getCourses() async {
+  final url = Uri.parse('$baseUrl/courses');
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.cast<Map<String, dynamic>>();
+  } else {
+    throw Exception('Failed to load courses: ${response.statusCode}');
+  }
+}
+static Future<Map<String, dynamic>> getCourseById(int courseId) async {
+  final url = Uri.parse('$baseUrl/courses/$courseId');  // ✅ Correct API endpoint
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body); // ✅ Parse JSON response
+  } else {
+    throw Exception('Failed to load course: ${response.statusCode}');
+  }
+}
+
+static Future<List<Map<String, dynamic>>> getChaptersByCourseId(int courseId) async {
+  final url = Uri.parse('$baseUrl/chapters/course/$courseId');  // ✅ New Endpoint
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.cast<Map<String, dynamic>>();
+  } else {
+    throw Exception('Failed to load chapters: ${response.statusCode}');
+  }
+}
+
+static Future<List<Map<String, dynamic>>> getChapters(int courseId) async {
+  final url = Uri.parse('$baseUrl/chapters/$courseId');
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.cast<Map<String, dynamic>>();
+  } else {
+    throw Exception('Failed to load chapters: ${response.statusCode}');
+  }
+}
+static Future<List<Map<String, dynamic>>> getAllChapters() async {
+  final url = Uri.parse('$baseUrl/chapters');  // ✅ No course_id in the URL
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.cast<Map<String, dynamic>>();
+  } else {
+    throw Exception('Failed to load chapters: ${response.statusCode}');
+  }
+}
 
 
 

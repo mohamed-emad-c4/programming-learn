@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:learn_programming/domain/repositories/auth_repository_impl.dart';
 import 'package:learn_programming/presentation/screens/essonsScreen.dart';
-import 'presentation/screens/fundamentals_screen.dart';
+import 'presentation/screens/basics_csrnnn.dart';
+import 'presentation/screens/course_screen.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/login_screen.dart';
 import 'presentation/cubit/auth_cubit.dart';
@@ -68,8 +69,9 @@ class MyApp extends StatelessWidget {
               ),
           '/reset-password': (context) => ResetPasswordScreen(),
           '/settings': (context) => SettingsScreen(),
-          '/fundamentals': (context) => FundamentalsScreen(
-                languageId: 0,
+          '/course-detail': (context) => CourseDetailScreen(  courseId: 14,),
+          '/courses': (context) => CourseScreen(
+           
               ),
           '/lessons': (context) {
             final args =
