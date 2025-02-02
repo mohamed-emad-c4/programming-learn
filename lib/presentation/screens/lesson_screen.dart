@@ -147,13 +147,7 @@ class _LessonScreenState extends State<LessonScreen> {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add a new lesson
-        },
-        backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+
     );
   }
 
