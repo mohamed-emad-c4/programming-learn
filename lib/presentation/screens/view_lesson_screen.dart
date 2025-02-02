@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class ViewLessonScreen extends StatefulWidget {
   final int lessonId;
@@ -27,12 +28,6 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _lesson = fetchLesson(widget.lessonId);
-  }
-
   void navigateToQuiz() {
     Navigator.pushNamed(context, '/quiz', arguments: {'lessonId': widget.lessonId});
   }
@@ -44,6 +39,12 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
         builder: (context) => ViewLessonScreen(lessonId: previousLessonId),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _lesson = fetchLesson(widget.lessonId);
   }
 
   @override
@@ -72,12 +73,13 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
             final content = lesson['content'] as Map<String, dynamic>?;
             final previousLessonId = lesson['order_number'] > 1 ? lesson['order_number'] - 1 : null;
 
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Card(
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Card(
                       elevation: 5,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -96,13 +98,17 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
                               ),
                             ),
                             const SizedBox(height: 10),
-                            Text(
-                              'Order: ${lesson['order_number']}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
+                            if (lesson['video_url'] != null)
+                              YoutubePlayer(
+                                controller: YoutubePlayerController(
+                                  initialVideoId: YoutubePlayer.convertUrlToId(lesson['video_url'])!,
+                                  flags: const YoutubePlayerFlags(
+                                    autoPlay: false,
+                                    mute: false,
+                                  ),
+                                ),
+                                showVideoProgressIndicator: true,
                               ),
-                            ),
                             const SizedBox(height: 10),
                             if (content != null)
                               ...content.entries.map((entry) {
@@ -112,7 +118,7 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
                                         child: Text(
                                           entry.value,
                                           style: const TextStyle(
-                                            fontSize: 20, // Bigger font for subtitles
+                                            fontSize: 20,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.black87,
                                           ),
@@ -123,41 +129,42 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
                                         child: Text(
                                           entry.value,
                                           style: const TextStyle(
-                                            fontSize: 16, // Normal font for content
+                                            fontSize: 16,
                                             height: 1.5,
                                             color: Colors.black87,
                                           ),
                                         ),
                                       );
                               }).toList(),
+                           
                           ],
                         ),
                       ),
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (previousLessonId != null)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (previousLessonId != null)
+                          ElevatedButton(
+                            onPressed: () => navigateToPreviousLesson(previousLessonId),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepPurple,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            ),
+                            child: const Text('Previous Lesson'),
+                          ),
                         ElevatedButton(
-                          onPressed: () => navigateToPreviousLesson(previousLessonId),
+                          onPressed: navigateToQuiz,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
+                            backgroundColor: Colors.green,
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           ),
-                          child: const Text('Previous Lesson'),
+                          child: const Text('Go to Quiz'),
                         ),
-                      ElevatedButton(
-                        onPressed: navigateToQuiz,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        ),
-                        child: const Text('Go to Quiz'),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           }
