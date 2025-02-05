@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learn_programming/presentation/screens/quiz_details_screen.dart';
 import 'dart:convert';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -29,7 +30,11 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
   }
 
   void navigateToQuiz() {
-    Navigator.pushNamed(context, '/quiz', arguments: {'lessonId': widget.lessonId});
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => QuizDetailsScreen(lessonId: widget.lessonId),
+        ));
   }
 
   void navigateToPreviousLesson(int previousLessonId) {
@@ -71,7 +76,8 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
           } else {
             final lesson = snapshot.data!;
             final content = lesson['content'] as Map<String, dynamic>?;
-            final previousLessonId = lesson['order_number'] > 1 ? lesson['order_number'] - 1 : null;
+            final previousLessonId =
+                lesson['order_number'] > 1 ? lesson['order_number'] - 1 : null;
 
             return SingleChildScrollView(
               child: Padding(
@@ -101,7 +107,8 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
                             if (lesson['video_url'] != null)
                               YoutubePlayer(
                                 controller: YoutubePlayerController(
-                                  initialVideoId: YoutubePlayer.convertUrlToId(lesson['video_url'])!,
+                                  initialVideoId: YoutubePlayer.convertUrlToId(
+                                      lesson['video_url'])!,
                                   flags: const YoutubePlayerFlags(
                                     autoPlay: false,
                                     mute: false,
@@ -114,7 +121,8 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
                               ...content.entries.map((entry) {
                                 return entry.key.contains('subtitle')
                                     ? Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0),
                                         child: Text(
                                           entry.value,
                                           style: const TextStyle(
@@ -125,7 +133,8 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
                                         ),
                                       )
                                     : Padding(
-                                        padding: const EdgeInsets.only(bottom: 8.0),
+                                        padding:
+                                            const EdgeInsets.only(bottom: 8.0),
                                         child: Text(
                                           entry.value,
                                           style: const TextStyle(
@@ -136,7 +145,6 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
                                         ),
                                       );
                               }).toList(),
-                           
                           ],
                         ),
                       ),
@@ -146,10 +154,12 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
                       children: [
                         if (previousLessonId != null)
                           ElevatedButton(
-                            onPressed: () => navigateToPreviousLesson(previousLessonId),
+                            onPressed: () =>
+                                navigateToPreviousLesson(previousLessonId),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.deepPurple,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
                             ),
                             child: const Text('Previous Lesson'),
                           ),
@@ -157,7 +167,8 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
                           onPressed: navigateToQuiz,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
                           ),
                           child: const Text('Go to Quiz'),
                         ),
