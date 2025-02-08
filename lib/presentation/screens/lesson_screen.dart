@@ -4,6 +4,8 @@ import 'package:learn_programming/presentation/screens/view_lesson_screen.dart';
 import 'dart:convert';
 import 'package:shimmer/shimmer.dart';
 
+import '../../data/datasources/api_service.dart';
+
 class LessonScreen extends StatefulWidget {
   final int chapterId;
 
@@ -17,10 +19,11 @@ class _LessonScreenState extends State<LessonScreen> {
   late Future<List<Map<String, dynamic>>> _lessons;
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _filteredLessons = [];
-
+ApiService apiService = ApiService();
   Future<List<Map<String, dynamic>>> fetchLessons(int chapterId) async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.2:8000/api/lessons/chapter/$chapterId'),
+      
+      Uri.parse('${ApiService.baseUrl}/lessons/chapter/$chapterId'),
       headers: {'Content-Type': 'application/json'},
     );
 

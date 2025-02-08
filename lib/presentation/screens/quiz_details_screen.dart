@@ -3,6 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:animate_do/animate_do.dart';
 
+import '../../data/datasources/api_service.dart';
+import 'quiz_submission_screen .dart';
+
 class QuizDetailsScreen extends StatefulWidget {
   final int lessonId;
 
@@ -14,10 +17,11 @@ class QuizDetailsScreen extends StatefulWidget {
 
 class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
   late Future<List<Map<String, dynamic>>> _quizzes;
+ApiService apiService = ApiService();
 
   Future<List<Map<String, dynamic>>> fetchQuizzes(int lessonId) async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.2:8000/api/quizzes/by-lesson/$lessonId'),
+      Uri.parse('${ApiService.baseUrl}/quizzes/by-lesson/$lessonId'),
       headers: {'Content-Type': 'application/json'},
     );
 
@@ -35,8 +39,17 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
     _quizzes = fetchQuizzes(widget.lessonId);
   }
 
-  void navigateToQuiz(int quizId) {
-    Navigator.pushNamed(context, '/quiz', arguments: {'quizId': quizId});
+  void navigateToQuiz(Map<String, dynamic> quiz) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizSubmissionScreen(
+          
+          quizId: quiz['id'],
+          questions: List<Map<String, dynamic>>.from(quiz['questions']),
+        ),
+      ),
+    );
   }
 
   @override
@@ -69,7 +82,8 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
                 return FadeInUp(
                   delay: Duration(milliseconds: 200 * index),
                   child: Padding(
-                    padding:  EdgeInsets.symmetric(horizontal: 20, vertical: MediaQuery.of(context).size.height * 0.15),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 20, vertical: MediaQuery.of(context).size.height * 0.05),
                     child: Card(
                       color: Colors.white,
                       elevation: 6,
@@ -106,10 +120,11 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
                             const SizedBox(height: 20),
                             Center(
                               child: ElevatedButton(
-                                onPressed: () => navigateToQuiz(quiz['id']),
+                                onPressed: () => navigateToQuiz(quiz),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.teal,
-                                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 30, vertical: 14),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),

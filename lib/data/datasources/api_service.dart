@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.2:8000/api';
+  static const String baseUrl = 'http://192.168.218.244:8000/api';
 
   // تسجيل حساب جديد
   static Future<Map<String, dynamic>> register({

@@ -4,6 +4,8 @@ import 'package:learn_programming/presentation/screens/quiz_details_screen.dart'
 import 'dart:convert';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../../data/datasources/api_service.dart';
+
 class ViewLessonScreen extends StatefulWidget {
   final int lessonId;
 
@@ -15,10 +17,12 @@ class ViewLessonScreen extends StatefulWidget {
 
 class _ViewLessonScreenState extends State<ViewLessonScreen> {
   late Future<Map<String, dynamic>> _lesson;
+  ApiService apiService = ApiService();
+
 
   Future<Map<String, dynamic>> fetchLesson(int lessonId) async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.2:8000/api/lessons/details/$lessonId'),
+      Uri.parse('${ApiService.baseUrl}/lessons/details/$lessonId'),
       headers: {'Content-Type': 'application/json'},
     );
 
