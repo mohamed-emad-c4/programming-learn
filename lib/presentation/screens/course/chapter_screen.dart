@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../cubit/course_cubit.dart';
-import 'lesson_screen.dart';
+import 'lesson/lesson_screen.dart';
 
 class ChapterScreen extends StatelessWidget {
   final int courseId;

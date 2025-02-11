@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:learn_programming/presentation/screens/course/quiz_details_screen.dart';
+import 'package:learn_programming/presentation/screens/course/quize/quiz_details_screen.dart';
 import 'dart:convert';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-import '../../../data/datasources/api_service.dart';
+import '../../../../data/datasources/api_service.dart';
 
 class ViewLessonScreen extends StatefulWidget {
   final int lessonId;

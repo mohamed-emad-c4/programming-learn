@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import '../../../data/datasources/values.dart';
-import 'lesson_screen.dart';
-import '../../../data/datasources/api_service.dart';
+import '../../../../data/datasources/values.dart';
+import '../lesson/lesson_screen.dart';
+import '../../../../data/datasources/api_service.dart';
 
 class QuizResultScreen extends StatefulWidget {
   final int quizId;
