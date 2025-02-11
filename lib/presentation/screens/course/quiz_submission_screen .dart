@@ -4,15 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import '../../data/datasources/api_service.dart';
-import '../../domain/repositories/auth_repository_impl.dart';
+import '../../../data/datasources/api_service.dart';
+import '../../../domain/repositories/auth_repository_impl.dart';
 import 'quiz_result_screen.dart';
 
 class QuizSubmissionScreen extends StatefulWidget {
   final int quizId;
   final List<Map<String, dynamic>> questions;
 
-  QuizSubmissionScreen({Key? key, required this.quizId, required this.questions}) : super(key: key);
+  QuizSubmissionScreen(
+      {super.key, required this.quizId, required this.questions});
   late String token;
 
   @override
@@ -21,7 +22,7 @@ class QuizSubmissionScreen extends StatefulWidget {
 
 class _QuizSubmissionScreenState extends State<QuizSubmissionScreen> {
   final Map<int, int> _selectedAnswers = {};
-ApiService apiService = ApiService();
+  ApiService apiService = ApiService();
 
   Future<void> submitAnswers() async {
     final authRepository = AuthRepositoryImpl();
@@ -60,15 +61,14 @@ ApiService apiService = ApiService();
         final List<dynamic> resultList = jsonDecode(resultResponse.body);
         if (resultList.isNotEmpty) {
           final result = resultList.first as Map<String, dynamic>;
-
-          Navigator.pushReplacement(
+          Navigator.pushReplacementNamed(
             context,
-            MaterialPageRoute(
-              builder: (context) => QuizResultScreen(
-                quizId: result['quiz_id'],
-                token: token,
-              ),
-            ),
+            '/quizResult',
+            arguments: {
+              'quizId': result['quiz_id'],
+              'token': token,
+              "numberOfQuestions": widget.questions.length
+            },
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

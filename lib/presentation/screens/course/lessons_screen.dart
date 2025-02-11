@@ -1,7 +1,7 @@
 // lib/presentation/screens/lessons_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import '../../data/datasources/api_service.dart';
+import '../../../data/datasources/api_service.dart';
 
 class LessonsScreen extends StatelessWidget {
   final int languageId;

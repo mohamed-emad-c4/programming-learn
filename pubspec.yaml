@@ -44,7 +44,8 @@ dependencies:
   youtube_player_flutter: ^9.1.1
   video_player: ^2.9.2
   animate_do: ^3.3.7
-  intl: ^0.20.2
+  fl_chart: ^0.70.2
+  charts_flutter_new: ^0.12.0
 
 dev_dependencies:
   flutter_test:

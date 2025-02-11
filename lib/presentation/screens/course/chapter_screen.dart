@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../cubit/course_cubit.dart';
+import '../../cubit/course_cubit.dart';
 import 'lesson_screen.dart';
 
 class ChapterScreen extends StatelessWidget {
   final int courseId;
 
-  const ChapterScreen({required this.courseId, Key? key}) : super(key: key);
+  const ChapterScreen({required this.courseId, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,8 @@ class ChapterScreen extends StatelessWidget {
       create: (context) => CourseCubit()..fetchCourseById(courseId),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('تفاصيل الدورة', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text('تفاصيل الدورة',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           backgroundColor: Colors.blueAccent,
           centerTitle: true,
           elevation: 4,
@@ -28,7 +29,8 @@ class ChapterScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const Icon(Icons.error_outline,
+                        color: Colors.red, size: 48),
                     const SizedBox(height: 16),
                     Text(
                       state.message,
@@ -36,7 +38,8 @@ class ChapterScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => context.read<CourseCubit>().fetchCourseById(courseId),
+                      onPressed: () =>
+                          context.read<CourseCubit>().fetchCourseById(courseId),
                       child: const Text('إعادة المحاولة'),
                     ),
                   ],
@@ -58,7 +61,8 @@ class ChapterScreen extends StatelessWidget {
                         image: DecorationImage(
                           image: NetworkImage(course['image_url'] ?? ''),
                           fit: BoxFit.cover,
-                          onError: (_, __) => const AssetImage('assets/images/fallback.jpg'),
+                          onError: (_, __) =>
+                              const AssetImage('assets/images/fallback.jpg'),
                         ),
                       ),
                       child: Container(
@@ -90,7 +94,8 @@ class ChapterScreen extends StatelessWidget {
                           // ✅ Course Description
                           Text(
                             course['description'] ?? 'لا يوجد وصف',
-                            style: const TextStyle(fontSize: 16, color: Colors.black87),
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.black87),
                           ),
                           const SizedBox(height: 20),
 
@@ -99,7 +104,10 @@ class ChapterScreen extends StatelessWidget {
                           // ✅ Chapters List
                           const Text(
                             '📚 الفصول',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                            style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent),
                           ),
                           const SizedBox(height: 10),
                           ListView.builder(
@@ -120,24 +128,32 @@ class ChapterScreen extends StatelessWidget {
                                     backgroundColor: Colors.blueAccent,
                                     child: Text(
                                       '${chapter['order_number']}',
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                   title: Text(
                                     chapter['title'],
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                                    style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87),
                                   ),
                                   subtitle: Text(
                                     chapter['content'] ?? 'لا يوجد محتوى',
-                                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                                    style: TextStyle(
+                                        fontSize: 14, color: Colors.grey[700]),
                                   ),
                                   onTap: () {
                                     Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => LessonScreen(chapterId: chapter['id']), // Replace 1 with the actual chapter ID
-  ),
-);
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => LessonScreen(
+                                            chapterId: chapter[
+                                                'id']), // Replace 1 with the actual chapter ID
+                                      ),
+                                    );
                                     // TODO: Navigate to lessons screen
                                   },
                                 ),

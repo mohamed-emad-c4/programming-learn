@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:learn_programming/data/datasources/values.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.218.244:8000/api';
+  static const String baseUrl = 'http://192.168.1.8:8000/api';
 
   // تسجيل حساب جديد
   static Future<Map<String, dynamic>> register({
@@ -92,7 +93,8 @@ static Future<bool> verifyToken(String token) async {
       final response = await http.get(url, headers: {
       'Authorization': 'Bearer $token',
     },);
-
+      current_chapter_Id = chapterNumber;
+      current_course_Id = languageId;
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         return data.cast<Map<String, dynamic>>();

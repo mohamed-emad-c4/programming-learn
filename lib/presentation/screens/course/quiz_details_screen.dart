@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:animate_do/animate_do.dart';
 
-import '../../data/datasources/api_service.dart';
+import '../../../data/datasources/api_service.dart';
 import 'quiz_submission_screen .dart';
 
 class QuizDetailsScreen extends StatefulWidget {

@@ -3,17 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:learn_programming/domain/repositories/auth_repository_impl.dart';
-import 'package:learn_programming/presentation/screens/lessons_screen.dart';
-import 'package:learn_programming/presentation/screens/quiz_submission_screen%20.dart';
-import 'presentation/screens/basics_csrnnn.dart';
-import 'presentation/screens/course_screen.dart';
+import 'package:learn_programming/presentation/screens/course/lessons_screen.dart';
+import 'package:learn_programming/presentation/screens/course/quiz_submission_screen%20.dart';
+import 'presentation/screens/course/basics_csrnnn.dart';
+import 'presentation/screens/course/course_screen.dart';
 import 'presentation/screens/home_screen.dart';
-import 'presentation/screens/login_screen.dart';
+import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/cubit/auth_cubit.dart';
 import 'domain/repositories/auth_repository.dart';
-import 'presentation/screens/quiz_details_screen.dart';
-import 'presentation/screens/reset_password_screen.dart';
-import 'presentation/screens/sign_up_screen.dart';
+import 'presentation/screens/course/quiz_details_screen.dart';
+import 'presentation/screens/course/quiz_result_screen.dart';
+import 'presentation/screens/auth/reset_password_screen.dart';
+import 'presentation/screens/auth/sign_up_screen.dart';
 import 'presentation/screens/settings_screen.dart'; // Added import
 
 void main() async {
@@ -86,6 +87,7 @@ class MyApp extends StatelessWidget {
             return QuizSubmissionScreen(
               quizId: args['quizId'],
               questions: args['questions'],
+
             );
           },
           '/quiz': (context) {
@@ -93,6 +95,14 @@ class MyApp extends StatelessWidget {
             return QuizSubmissionScreen(
               quizId: args['quizId'],
               questions: args['questions'],
+            );
+          },
+          '/quizResult': (context) {
+            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+            return QuizResultScreen(
+              quizId: args['quizId'],
+              token: args['token'],
+              numberOfQuestions: args['numberOfQuestions'],
             );
           },
         },

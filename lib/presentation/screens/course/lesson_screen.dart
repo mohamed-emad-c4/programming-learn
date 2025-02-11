@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:learn_programming/presentation/screens/view_lesson_screen.dart';
+import 'package:learn_programming/data/datasources/values.dart';
+import 'package:learn_programming/presentation/screens/course/view_lesson_screen.dart';
 import 'dart:convert';
 import 'package:shimmer/shimmer.dart';
 
-import '../../data/datasources/api_service.dart';
+import '../../../data/datasources/api_service.dart';
 
 class LessonScreen extends StatefulWidget {
   final int chapterId;
@@ -26,7 +27,7 @@ ApiService apiService = ApiService();
       Uri.parse('${ApiService.baseUrl}/lessons/chapter/$chapterId'),
       headers: {'Content-Type': 'application/json'},
     );
-
+current_chapter_Id =chapterId;
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return List<Map<String, dynamic>>.from(data);
