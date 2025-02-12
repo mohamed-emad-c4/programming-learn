@@ -16,14 +16,13 @@ class CourseScreen extends StatelessWidget {
           title: const Text(
             '📚 الدورات التدريبية',
             style: TextStyle(
-              fontFamily: 'YourCustomFont', // Add a custom font if available
               fontWeight: FontWeight.bold,
-              fontSize: 20, // Increased font size
+              fontSize: 22,
             ),
           ),
-          backgroundColor: Colors.blue.shade700,
+          backgroundColor: Colors.blue.shade800,
           centerTitle: true,
-          elevation: 8, // Increased shadow
+          elevation: 4,
           flexibleSpace: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -72,15 +71,15 @@ class CourseScreen extends StatelessWidget {
           mainAxisSpacing: 12,
           childAspectRatio: 0.75,
         ),
-        itemCount: 6, // Number of placeholder cards
+        itemCount: 6,
         itemBuilder: (context, index) {
           return Shimmer.fromColors(
             baseColor: Colors.grey.shade300,
             highlightColor: Colors.grey.shade100,
             child: Card(
-              elevation: 6,
+              elevation: 4,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -162,7 +161,7 @@ class CourseScreen extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isWideScreen ? 3 : 2, // Responsive columns
+              crossAxisCount: isWideScreen ? 3 : 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               childAspectRatio: 0.75,
@@ -188,8 +187,8 @@ class CourseScreen extends StatelessWidget {
         );
       },
       child: Card(
-        elevation: 6,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -203,40 +202,31 @@ class CourseScreen extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.5)
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.6)
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-                  Positioned(
-                    bottom: 8,
-                    left: 8,
-                    child: Text(
-                      course['name'],
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                ),
+                alignment: Alignment.bottomCenter,
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  course['name'],
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                ],
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                ),
               ),
             ),
-
             // Course Info
             Padding(
               padding: const EdgeInsets.all(10),
@@ -253,16 +243,12 @@ class CourseScreen extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
-
-                  // Responsive Category & Language Tags
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
                     children: [
-                      _infoTag(
-                          Icons.category, course['category'] ?? 'غير محدد'),
-                      _infoTag(
-                          Icons.language, course['language'] ?? 'غير محدد'),
+                      _infoTag(Icons.category, course['category'] ?? 'غير محدد'),
+                      _infoTag(Icons.language, course['language'] ?? 'غير محدد'),
                     ],
                   ),
                 ],
@@ -290,7 +276,6 @@ class CourseScreen extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(color: Colors.white, fontSize: 11),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
