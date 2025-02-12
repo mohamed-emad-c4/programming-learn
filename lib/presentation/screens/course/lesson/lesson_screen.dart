@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:learn_programming/presentation/screens/course/lesson/view_lesson_screen.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../cubit/lesson_cubit.dart';
-import '../../../cubit/lesson_state.dart';
+import '../../../cubit/lesson/lesson_cubit.dart';
+import '../../../cubit/lesson/lesson_state.dart';
 
 class LessonScreen extends StatefulWidget {
   final int languageId;

@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
-import '../../../../../data/datasources/api_service.dart';
+import '../../../../../../data/datasources/api_service.dart';
 import 'lesson_state.dart';
 
 class LessonCubit extends Cubit<LessonState> {

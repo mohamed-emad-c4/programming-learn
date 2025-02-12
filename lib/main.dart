@@ -9,10 +9,11 @@ import 'domain/repositories/auth_repository.dart';
 import 'domain/repositories/auth_repository_impl.dart';
 
 // Cubit
-import 'presentation/cubit/auth_cubit.dart';
+import 'presentation/cubit/auth/auth_cubit.dart';
 
 // Screens
-import 'presentation/cubit/lesson_cubit.dart';
+import 'presentation/cubit/lesson/lesson_cubit.dart';
+import 'presentation/cubit/quiz/quiz_submission_cubit.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/sign_up_screen.dart';
 import 'presentation/screens/auth/reset_password_screen.dart';
@@ -62,6 +63,11 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthCubit>(create: (_) => GetIt.I<AuthCubit>()),
          BlocProvider<LessonCubit>(
           create: (context) => LessonCubit(ApiService()),
+        ),
+         BlocProvider<QuizSubmissionCubit>(
+          create: (context) => QuizSubmissionCubit(
+          
+          ),
         ),
       ],
       child: MaterialApp(

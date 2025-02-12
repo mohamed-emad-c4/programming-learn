@@ -68,6 +68,53 @@ class ApiService {
 
 // lib/data/datasources/api_service.dart
 // lib/data/datasources/api_service.dart
+  Future<List<Map<String, dynamic>>> fetchQuizzesByLesson(int lessonId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/quizzes/by-lesson/$lessonId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data);
+    } else {
+      throw Exception('Failed to load quizzes');
+    }
+  }
+Future<void> submitQuizAnswers(int quizId, Map<int, int> selectedAnswers, String token) async {
+  final List<Map<String, dynamic>> answers = selectedAnswers.entries
+      .map((entry) => {
+            "question_id": entry.key,
+            "selected_option": entry.value,
+          })
+      .toList();
+
+  final response = await http.post(
+    Uri.parse('$baseUrl/quizzes/$quizId/submit'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({"answers": answers}),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Failed to submit quiz.');
+  }
+}
+static Future<http.Response> submitQuiz(
+    int quizId, List<Map<String, dynamic>> answers, String token) async {
+  final url = Uri.parse('$baseUrl/quizzes/$quizId/submit');
+  return await http.post(
+    url,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({"answers": answers}),
+  );
+}
+
 static Future<bool> verifyToken(String token) async {
   final url = Uri.parse('$baseUrl/users/verify-token'); // Ensure correct path
 
@@ -98,6 +145,20 @@ static Future<bool> verifyToken(String token) async {
   }
 }
 
+ Future<Map<String, dynamic>> fetchLesson(int lessonId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/lessons/details/$lessonId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load lesson');
+    }
+  }
+
+  
   // دالة لجلب الدروس
   static Future<List<Map<String, dynamic>>> getLessons(int languageId, int chapterNumber, String token) async {
     try {

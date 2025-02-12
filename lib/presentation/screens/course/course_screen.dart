@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:learn_programming/presentation/screens/course/chapter_screen.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../cubit/course_cubit.dart';
+import '../../cubit/course/course_cubit.dart';
 
 class CourseScreen extends StatelessWidget {
   const CourseScreen({super.key});
