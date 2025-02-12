@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
 // Domain
+import 'data/datasources/api_service.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'domain/repositories/auth_repository_impl.dart';
 
@@ -11,6 +12,7 @@ import 'domain/repositories/auth_repository_impl.dart';
 import 'presentation/cubit/auth_cubit.dart';
 
 // Screens
+import 'presentation/cubit/lesson_cubit.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/sign_up_screen.dart';
 import 'presentation/screens/auth/reset_password_screen.dart';
@@ -58,6 +60,9 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthCubit>(create: (_) => GetIt.I<AuthCubit>()),
+         BlocProvider<LessonCubit>(
+          create: (context) => LessonCubit(ApiService()),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -91,11 +96,10 @@ class MyApp extends StatelessWidget {
           chapterNumber: args['chapterNumber'] as int,
         );
       },
-      '/view-lesson': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments
-            as Map<String, dynamic>;
-        return ViewLessonScreen(lessonId: args['lessonId']);
-      },
+       '/view-lesson': (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return ViewLessonScreen(lessonId: args['lessonId']);
+    },
       '/quiz-details': (context) {
         final args = ModalRoute.of(context)!.settings.arguments
             as Map<String, dynamic>;

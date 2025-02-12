@@ -85,7 +85,19 @@ static Future<bool> verifyToken(String token) async {
     return false; // Token is invalid
   }
 }
- 
+ Future<List<Map<String, dynamic>>> fetchLessons(int chapterNumber) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/lessons/chapter/$chapterNumber'),
+    headers: {'Content-Type': 'application/json'},
+  );
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return List<Map<String, dynamic>>.from(data);
+  } else {
+    throw Exception('Failed to load lessons');
+  }
+}
+
   // دالة لجلب الدروس
   static Future<List<Map<String, dynamic>>> getLessons(int languageId, int chapterNumber, String token) async {
     try {
