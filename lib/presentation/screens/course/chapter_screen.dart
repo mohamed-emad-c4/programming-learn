@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../data/datasources/values.dart';
 import '../../cubit/course_cubit.dart';
 import 'lesson/lesson_screen.dart';
 
@@ -146,15 +147,16 @@ class ChapterScreen extends StatelessWidget {
                                         fontSize: 14, color: Colors.grey[700]),
                                   ),
                                   onTap: () {
-                                    Navigator.push(
+                                    Navigator.pushNamed(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (context) => LessonScreen(
-                                            chapterId: chapter[
-                                                'id']), // Replace 1 with the actual chapter ID
-                                      ),
+                                      '/lessons',
+                                      arguments: {
+                                        'languageId':
+                                            current_course_Id, // حط الـ ID الفعلي هنا
+                                        'chapterNumber':
+                                            chapter['id'], // حط رقم الشابتر هنا
+                                      },
                                     );
-                                    // TODO: Navigate to lessons screen
                                   },
                                 ),
                               );

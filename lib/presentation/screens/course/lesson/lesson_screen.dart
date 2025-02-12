@@ -8,9 +8,10 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../data/datasources/api_service.dart';
 
 class LessonScreen extends StatefulWidget {
-  final int chapterId;
+  final int languageId;
+  final int chapterNumber;  
 
-  const LessonScreen({Key? key, required this.chapterId}) : super(key: key);
+  const LessonScreen({Key? key, required this.languageId, required this.chapterNumber}) : super(key: key);
 
   @override
   _LessonScreenState createState() => _LessonScreenState();
@@ -21,13 +22,13 @@ class _LessonScreenState extends State<LessonScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _filteredLessons = [];
 ApiService apiService = ApiService();
-  Future<List<Map<String, dynamic>>> fetchLessons(int chapterId) async {
+  Future<List<Map<String, dynamic>>> fetchLessons(int chapterNumber) async {
     final response = await http.get(
       
-      Uri.parse('${ApiService.baseUrl}/lessons/chapter/$chapterId'),
+      Uri.parse('${ApiService.baseUrl}/lessons/chapter/$chapterNumber'),
       headers: {'Content-Type': 'application/json'},
     );
-current_chapter_Id =chapterId;
+current_chapter_Id =chapterNumber;
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return List<Map<String, dynamic>>.from(data);
@@ -48,7 +49,7 @@ current_chapter_Id =chapterId;
   @override
   void initState() {
     super.initState();
-    _lessons = fetchLessons(widget.chapterId);
+    _lessons = fetchLessons(widget.chapterNumber);
   }
 
   @override
@@ -137,7 +138,7 @@ current_chapter_Id =chapterId;
             return RefreshIndicator(
               onRefresh: () async {
                 setState(() {
-                  _lessons = fetchLessons(widget.chapterId);
+                  _lessons = fetchLessons(widget.chapterNumber);
                 });
               },
               child: ListView.builder(
@@ -202,7 +203,7 @@ current_chapter_Id =chapterId;
           ElevatedButton(
             onPressed: () {
               setState(() {
-                _lessons = fetchLessons(widget.chapterId);
+                _lessons = fetchLessons(widget.chapterNumber);
               });
             },
             child: const Text('Retry'),

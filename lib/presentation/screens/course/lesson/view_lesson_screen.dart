@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:learn_programming/presentation/screens/course/quize/quiz_details_screen.dart';
 import 'dart:convert';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-
 import '../../../../data/datasources/api_service.dart';
 
 class ViewLessonScreen extends StatefulWidget {
@@ -19,7 +18,6 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
   late Future<Map<String, dynamic>> _lesson;
   ApiService apiService = ApiService();
 
-
   Future<Map<String, dynamic>> fetchLesson(int lessonId) async {
     final response = await http.get(
       Uri.parse('${ApiService.baseUrl}/lessons/details/$lessonId'),
@@ -34,11 +32,14 @@ class _ViewLessonScreenState extends State<ViewLessonScreen> {
   }
 
   void navigateToQuiz() {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => QuizDetailsScreen(lessonId: widget.lessonId),
-        ));
+  Navigator.pushNamed(
+  context,
+  '/quiz-details',
+  arguments: {
+    'lessonId': widget.lessonId,
+  },
+);
+
   }
 
   void navigateToPreviousLesson(int previousLessonId) {

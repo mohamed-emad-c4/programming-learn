@@ -5,6 +5,8 @@ import 'package:shimmer/shimmer.dart';
 import '../../cubit/course_cubit.dart';
 
 class CourseScreen extends StatelessWidget {
+  const CourseScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -179,11 +181,10 @@ class CourseScreen extends StatelessWidget {
   Widget _buildCourseCard(BuildContext context, Map<String, dynamic> course) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) => ChapterScreen(courseId: course['id']),
-          ),
+          '/chapter',
+          arguments: {'courseId': course['id']},
         );
       },
       child: Card(
@@ -258,8 +259,10 @@ class CourseScreen extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 4,
                     children: [
-                      _infoTag(Icons.category, course['category'] ?? 'غير محدد'),
-                      _infoTag(Icons.language, course['language'] ?? 'غير محدد'),
+                      _infoTag(
+                          Icons.category, course['category'] ?? 'غير محدد'),
+                      _infoTag(
+                          Icons.language, course['language'] ?? 'غير محدد'),
                     ],
                   ),
                 ],

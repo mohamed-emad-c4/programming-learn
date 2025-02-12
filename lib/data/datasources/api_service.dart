@@ -89,7 +89,7 @@ static Future<bool> verifyToken(String token) async {
   // دالة لجلب الدروس
   static Future<List<Map<String, dynamic>>> getLessons(int languageId, int chapterNumber, String token) async {
     try {
-      final url = Uri.parse('$baseUrl/lessons/$languageId/$chapterNumber');
+      final url = Uri.parse('$baseUrl/lessons/$chapterNumber');
       final response = await http.get(url, headers: {
       'Authorization': 'Bearer $token',
     },);

@@ -381,7 +381,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       child: ElevatedButton(
         onPressed: () {
           Navigator.pushNamedAndRemoveUntil(
-              context, '/lessons', ModalRoute.withName('/home'),
+              context, '/lessons', ModalRoute.withName('/chapter'),
               arguments: {
               'languageId': current_course_Id,
                'chapterNumber': current_chapter_Id}); // Replace with your desired route,

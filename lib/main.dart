@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:learn_programming/domain/repositories/auth_repository_impl.dart';
-import 'package:learn_programming/presentation/screens/course/lesson/lessons_screen.dart';
+import 'package:learn_programming/presentation/screens/course/chapter_screen.dart';
 import 'package:learn_programming/presentation/screens/course/quize/quiz_submission_screen%20.dart';
 import 'presentation/screens/course/basics_csrnnn.dart';
 import 'presentation/screens/course/course_screen.dart';
+import 'presentation/screens/course/lesson/lesson_screen.dart';
+import 'presentation/screens/course/lesson/view_lesson_screen.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/cubit/auth_cubit.dart';
@@ -73,32 +75,45 @@ class MyApp extends StatelessWidget {
           '/settings': (context) => SettingsScreen(),
           '/course-detail': (context) => CourseDetailScreen(courseId: 14),
           '/courses': (context) => CourseScreen(),
+          '/chapter': (context) => ChapterScreen(
+                courseId: 14,
+              ),
           '/lessons': (context) {
-            final args =
-                ModalRoute.of(context)!.settings.arguments as Map<String, int>;
-            return LessonsScreen(
-              languageId: args['languageId']!,
-              chapterNumber: args['chapterNumber']!,
+            final args = ModalRoute.of(context)!.settings.arguments
+                as Map<String, dynamic>;
+            return LessonScreen(
+              languageId: args['languageId'] as int,
+              chapterNumber: args['chapterNumber'] as int,
             );
           },
-          '/quizDetails': (context) => const QuizDetailsScreen(lessonId: 1),
-          '/quizSubmission': (context) {
-            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-            return QuizSubmissionScreen(
-              quizId: args['quizId'],
-              questions: args['questions'],
-
-            );
+          '/view-lesson': (context) {
+            final arguments = ModalRoute.of(context)!.settings.arguments
+                as Map<String, dynamic>;
+            return ViewLessonScreen(lessonId: arguments['lessonId']);
           },
+          '/quiz-details': (context) {
+            final arguments = ModalRoute.of(context)!.settings.arguments
+                as Map<String, dynamic>;
+            return QuizDetailsScreen(lessonId: arguments['lessonId']);
+          },
+              '/quiz-submission': (context) {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return QuizSubmissionScreen(
+        quizId: arguments['quizId'],
+        questions: List<Map<String, dynamic>>.from(arguments['questions']),
+      );
+    },
           '/quiz': (context) {
-            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+            final args = ModalRoute.of(context)!.settings.arguments
+                as Map<String, dynamic>;
             return QuizSubmissionScreen(
               quizId: args['quizId'],
               questions: args['questions'],
             );
           },
           '/quizResult': (context) {
-            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+            final args = ModalRoute.of(context)!.settings.arguments
+                as Map<String, dynamic>;
             return QuizResultScreen(
               quizId: args['quizId'],
               token: args['token'],

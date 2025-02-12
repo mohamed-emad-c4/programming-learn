@@ -40,16 +40,15 @@ ApiService apiService = ApiService();
   }
 
   void navigateToQuiz(Map<String, dynamic> quiz) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => QuizSubmissionScreen(
-          
-          quizId: quiz['id'],
-          questions: List<Map<String, dynamic>>.from(quiz['questions']),
-        ),
-      ),
-    );
+  Navigator.pushNamed(
+  context,
+  '/quiz-submission',
+  arguments: {
+    'quizId': quiz['id'],
+    'questions': List<Map<String, dynamic>>.from(quiz['questions']),
+  },
+);
+
   }
 
   @override
