@@ -114,6 +114,21 @@ static Future<http.Response> submitQuiz(
     body: jsonEncode({"answers": answers}),
   );
 }
+Future<List<Map<String, dynamic>>> getData(String endpoint, String token) async {
+  final response = await http.get(
+    Uri.parse('${ApiService.baseUrl}$endpoint'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+  if (response.statusCode == 200) {
+    final List<dynamic> resultList = jsonDecode(response.body);
+    return resultList.map((item) => item as Map<String, dynamic>).toList();
+  } else {
+    throw Exception('Failed to load data');
+  }
+}
 
 static Future<bool> verifyToken(String token) async {
   final url = Uri.parse('$baseUrl/users/verify-token'); // Ensure correct path

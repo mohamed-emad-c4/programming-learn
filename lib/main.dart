@@ -13,6 +13,7 @@ import 'presentation/cubit/auth/auth_cubit.dart';
 
 // Screens
 import 'presentation/cubit/lesson/lesson_cubit.dart';
+import 'presentation/cubit/quiz/quiz_result_cubit.dart';
 import 'presentation/cubit/quiz/quiz_submission_cubit.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/sign_up_screen.dart';
@@ -66,9 +67,9 @@ class MyApp extends StatelessWidget {
         ),
          BlocProvider<QuizSubmissionCubit>(
           create: (context) => QuizSubmissionCubit(
-          
           ),
         ),
+         BlocProvider<QuizResultCubit>(create: (context) => QuizResultCubit(ApiService())),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
