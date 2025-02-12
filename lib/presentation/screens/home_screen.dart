@@ -1,7 +1,7 @@
 // lib/presentation/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_animate/flutter_animate.dart'; // استيراد المكتبة
+import 'package:flutter_animate/flutter_animate.dart';
 import '../cubit/auth_cubit.dart';
 import 'settings_screen.dart';
 
@@ -23,103 +23,88 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('الصفحة الرئيسية'),
+        title: const Text('الصفحة الرئيسية'),
         actions: [
           IconButton(
-            icon: Icon(Icons.settings), // أيقونة الإعدادات
-            onPressed: () {
-              // في HomeScreen
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BlocProvider.value(
-                    value:
-                        BlocProvider.of<AuthCubit>(context), // تمرير AuthCubit
-                    child: SettingsScreen(),
-                  ),
-                ),
-              ); // الانتقال إلى شاشة الإعدادات
-            },
+            icon: const Icon(Icons.settings),
+            onPressed: () => _navigateToSettings(context),
           ),
         ],
       ),
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
           if (state is AuthLoading) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildGridSection(context),
-                ],
-              ),
-            ),
+            padding: const EdgeInsets.all(16.0),
+            child: _buildGridSection(context),
           );
         },
       ),
     );
   }
 
+  void _navigateToSettings(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: context.read<AuthCubit>(),
+          child:  SettingsScreen(),
+        ),
+      ),
+    );
+  }
+
   Widget _buildGridSection(BuildContext context) {
-    return GridView.count(
-  shrinkWrap: true,
-  physics: NeverScrollableScrollPhysics(),
-  crossAxisCount: 2,
-  crossAxisSpacing: 16,
-  mainAxisSpacing: 16,
-  children: [
-    _buildCard(
-      icon: Icons.computer,
-      title: 'أساسيات الكمبيوتر',
-      description: 'تعلم أساسيات الهاردوير والسوفتوير.',
-      onTap: () {
-        Navigator.pushNamed(context, '/course-detail');
+    final items = [
+      {
+        'icon': Icons.computer,
+        'title': 'أساسيات الكمبيوتر',
+        'description': 'تعلم أساسيات الهاردوير والسوفتوير.',
+        'route': '/course-detail'
       },
-    )
-        .animate()
-        .fadeIn(duration: 500.ms, delay: 200.ms)
-        .slideX(begin: -0.5, end: 0, duration: 500.ms),
-    _buildCard(
-      icon: Icons.code,
-      title: 'لغة البرمجة',
-      description: 'تعلم بايثون، جافا، وغيرها.',
-      onTap: () {
-        Navigator.pushNamed(context, '/courses');
+      {
+        'icon': Icons.code,
+        'title': 'لغة البرمجة',
+        'description': 'تعلم بايثون، جافا، وغيرها.',
+        'route': '/courses'
       },
-    )
-        .animate()
-        .fadeIn(duration: 500.ms, delay: 400.ms)
-        .slideX(begin: 0.5, end: 0, duration: 500.ms),
-    _buildCard(
-      icon: Icons.lightbulb_outline,
-      title: 'تعلم المهارات',
-      description: 'طور التفكير النقدي والإبداع.',
-      onTap: () {
-        Navigator.pushNamed(context, '/skills');
+      {
+        'icon': Icons.lightbulb_outline,
+        'title': 'تعلم المهارات',
+        'description': 'طور التفكير النقدي والإبداع.',
+        'route': '/skills'
       },
-    )
-        .animate()
-        .fadeIn(duration: 500.ms, delay: 600.ms)
-        .slideY(begin: -0.5, end: 0, duration: 500.ms),
-    _buildCard(
-      icon: Icons.bug_report,
-      title: 'حل المشكلات',
-      description: 'تدرب على بناء المنطق والخوارزميات.',
-      onTap: () {
-        Navigator.pushNamed(context, '/problem-solving');
+      {
+        'icon': Icons.bug_report,
+        'title': 'حل المشكلات',
+        'description': 'تدرب على بناء المنطق والخوارزميات.',
+        'route': '/problem-solving'
       },
-    )
-        .animate()
-        .fadeIn(duration: 500.ms, delay: 800.ms)
-        .slideY(begin: 0.5, end: 0, duration: 500.ms),
-  ],
-);
-  
-  
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return _buildCard(
+          icon: item['icon'] as IconData,
+          title: item['title'] as String,
+          description: item['description'] as String,
+          onTap: () => Navigator.pushNamed(context, item['route'] as String),
+          delay: 200 * (index + 1),
+        );
+      },
+    );
   }
 
   Widget _buildCard({
@@ -127,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required String title,
     required String description,
     required VoidCallback onTap,
+    required int delay,
   }) {
     return Card(
       elevation: 4,
@@ -144,22 +130,22 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 40, color: Colors.blue),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 title,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 description,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms, delay: delay.ms);
   }
 }

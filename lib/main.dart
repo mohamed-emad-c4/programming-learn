@@ -2,34 +2,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:learn_programming/domain/repositories/auth_repository_impl.dart';
-import 'package:learn_programming/presentation/screens/course/chapter_screen.dart';
-import 'package:learn_programming/presentation/screens/course/quize/quiz_submission_screen%20.dart';
-import 'presentation/screens/course/basics_csrnnn.dart';
+
+// Domain
+import 'domain/repositories/auth_repository.dart';
+import 'domain/repositories/auth_repository_impl.dart';
+
+// Cubit
+import 'presentation/cubit/auth_cubit.dart';
+
+// Screens
+import 'presentation/screens/auth/login_screen.dart';
+import 'presentation/screens/auth/sign_up_screen.dart';
+import 'presentation/screens/auth/reset_password_screen.dart';
+import 'presentation/screens/course/quize/quiz_submission_screen .dart';
+import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/settings_screen.dart';
 import 'presentation/screens/course/course_screen.dart';
+import 'presentation/screens/course/chapter_screen.dart';
 import 'presentation/screens/course/lesson/lesson_screen.dart';
 import 'presentation/screens/course/lesson/view_lesson_screen.dart';
-import 'presentation/screens/home_screen.dart';
-import 'presentation/screens/auth/login_screen.dart';
-import 'presentation/cubit/auth_cubit.dart';
-import 'domain/repositories/auth_repository.dart';
 import 'presentation/screens/course/quize/quiz_details_screen.dart';
 import 'presentation/screens/course/quize/quiz_result_screen.dart';
-import 'presentation/screens/auth/reset_password_screen.dart';
-import 'presentation/screens/auth/sign_up_screen.dart';
-import 'presentation/screens/settings_screen.dart'; // Added import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await setupDependencies();
-  runApp(MyApp());
+  await _setupDependencies();
+  runApp(const MyApp());
 }
 
-Future<void> setupDependencies() async {
+Future<void> _setupDependencies() async {
+  // Register Repositories
   final authRepository = AuthRepositoryImpl();
   GetIt.I.registerSingleton<AuthRepository>(authRepository);
+
+  // Register Cubits
   GetIt.I.registerFactory(() => AuthCubit(GetIt.I<AuthRepository>()));
 
+  // Check Token
   final token = await authRepository.getToken();
   if (token != null) {
     final isValid = await authRepository.validateToken(token);
@@ -46,8 +55,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => GetIt.I<AuthCubit>(), // Provide AuthCubit
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthCubit>(create: (_) => GetIt.I<AuthCubit>()),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Learn Programming',
@@ -58,70 +69,55 @@ class MyApp extends StatelessWidget {
         initialRoute: GetIt.I.isRegistered<String>(instanceName: 'token')
             ? '/home'
             : '/login',
-        routes: {
-          '/login': (context) => BlocProvider(
-                create: (context) => GetIt.I<AuthCubit>(),
-                child: LoginScreen(),
-              ),
-          '/sign-up': (context) => BlocProvider(
-                create: (context) => GetIt.I<AuthCubit>(),
-                child: SignUpScreen(),
-              ),
-          '/home': (context) => BlocProvider(
-                create: (context) => GetIt.I<AuthCubit>(),
-                child: HomeScreen(),
-              ),
-          '/reset-password': (context) => ResetPasswordScreen(),
-          '/settings': (context) => SettingsScreen(),
-          '/course-detail': (context) => CourseDetailScreen(courseId: 14),
-          '/courses': (context) => CourseScreen(),
-          '/chapter': (context) => ChapterScreen(
-                courseId: 14,
-              ),
-          '/lessons': (context) {
-            final args = ModalRoute.of(context)!.settings.arguments
-                as Map<String, dynamic>;
-            return LessonScreen(
-              languageId: args['languageId'] as int,
-              chapterNumber: args['chapterNumber'] as int,
-            );
-          },
-          '/view-lesson': (context) {
-            final arguments = ModalRoute.of(context)!.settings.arguments
-                as Map<String, dynamic>;
-            return ViewLessonScreen(lessonId: arguments['lessonId']);
-          },
-          '/quiz-details': (context) {
-            final arguments = ModalRoute.of(context)!.settings.arguments
-                as Map<String, dynamic>;
-            return QuizDetailsScreen(lessonId: arguments['lessonId']);
-          },
-              '/quiz-submission': (context) {
-      final arguments = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-      return QuizSubmissionScreen(
-        quizId: arguments['quizId'],
-        questions: List<Map<String, dynamic>>.from(arguments['questions']),
-      );
-    },
-          '/quiz': (context) {
-            final args = ModalRoute.of(context)!.settings.arguments
-                as Map<String, dynamic>;
-            return QuizSubmissionScreen(
-              quizId: args['quizId'],
-              questions: args['questions'],
-            );
-          },
-          '/quizResult': (context) {
-            final args = ModalRoute.of(context)!.settings.arguments
-                as Map<String, dynamic>;
-            return QuizResultScreen(
-              quizId: args['quizId'],
-              token: args['token'],
-              numberOfQuestions: args['numberOfQuestions'],
-            );
-          },
-        },
+        routes: _buildRoutes(),
       ),
     );
+  }
+
+  Map<String, WidgetBuilder> _buildRoutes() {
+    return {
+      '/login': (context) => LoginScreen(),
+      '/sign-up': (context) => SignUpScreen(),
+      '/home': (context) => HomeScreen(),
+      '/reset-password': (context) => ResetPasswordScreen(),
+      '/settings': (context) => SettingsScreen(),
+      '/courses': (context) => CourseScreen(),
+      '/chapter': (context) => ChapterScreen(courseId: 14),
+      '/lessons': (context) {
+        final args = ModalRoute.of(context)!.settings.arguments
+            as Map<String, dynamic>;
+        return LessonScreen(
+          languageId: args['languageId'] as int,
+          chapterNumber: args['chapterNumber'] as int,
+        );
+      },
+      '/view-lesson': (context) {
+        final args = ModalRoute.of(context)!.settings.arguments
+            as Map<String, dynamic>;
+        return ViewLessonScreen(lessonId: args['lessonId']);
+      },
+      '/quiz-details': (context) {
+        final args = ModalRoute.of(context)!.settings.arguments
+            as Map<String, dynamic>;
+        return QuizDetailsScreen(lessonId: args['lessonId']);
+      },
+      '/quiz-submission': (context) {
+        final args = ModalRoute.of(context)!.settings.arguments
+            as Map<String, dynamic>;
+        return QuizSubmissionScreen(
+          quizId: args['quizId'],
+          questions: List<Map<String, dynamic>>.from(args['questions']),
+        );
+      },
+      '/quizResult': (context) {
+        final args = ModalRoute.of(context)!.settings.arguments
+            as Map<String, dynamic>;
+        return QuizResultScreen(
+          quizId: args['quizId'],
+          token: args['token'],
+          numberOfQuestions: args['numberOfQuestions'],
+        );
+      },
+    };
   }
 }
