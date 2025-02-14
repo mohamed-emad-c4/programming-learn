@@ -13,6 +13,7 @@ import 'presentation/cubit/auth/auth_cubit.dart';
 
 // Screens
 import 'presentation/cubit/lesson/lesson_cubit.dart';
+import 'presentation/cubit/problem/tag/tags_cubit.dart';
 import 'presentation/cubit/quiz/quiz_result_cubit.dart';
 import 'presentation/cubit/quiz/quiz_submission_cubit.dart';
 import 'presentation/screens/auth/login_screen.dart';
@@ -20,6 +21,7 @@ import 'presentation/screens/auth/sign_up_screen.dart';
 import 'presentation/screens/auth/reset_password_screen.dart';
 import 'presentation/screens/course/quize/quiz_submission_screen .dart';
 import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/problem/tag/tags_screen.dart';
 import 'presentation/screens/settings_screen.dart';
 import 'presentation/screens/course/course_screen.dart';
 import 'presentation/screens/course/chapter_screen.dart';
@@ -70,6 +72,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
          BlocProvider<QuizResultCubit>(create: (context) => QuizResultCubit(ApiService())),
+         BlocProvider<TagsCubit>(create: (context) => TagsCubit(ApiService())),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -129,6 +132,7 @@ class MyApp extends StatelessWidget {
           numberOfQuestions: args['numberOfQuestions'],
         );
       },
+       '/tags': (context) => const TagsScreen(),
     };
   }
 }

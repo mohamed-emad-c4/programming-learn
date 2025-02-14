@@ -3,8 +3,10 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:learn_programming/data/datasources/values.dart';
 
+import '../models/tag.dart';
+
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.8:8000/api';
+  static const String baseUrl = 'http://192.168.218.244:8000/api';
 
   // تسجيل حساب جديد
   static Future<Map<String, dynamic>> register({
@@ -251,6 +253,20 @@ static Future<List<Map<String, dynamic>>> getAllChapters() async {
   }
 }
 
+  Future<List<Tag>> getTags() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/problems/tags'));
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonData = json.decode(response.body);
+        return jsonData.map((e) => Tag.fromJson(e)).toList();
+      } else {
+        throw Exception('Failed to load tags');
+      }
+    } catch (e) {
+      log('Error: $e');
+      throw Exception('Failed to load tags');
+    }
+  }
 
 
 

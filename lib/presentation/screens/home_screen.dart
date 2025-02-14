@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'icon': Icons.bug_report,
         'title': 'حل المشكلات',
         'description': 'تدرب على بناء المنطق والخوارزميات.',
-        'route': '/problem-solving'
+        'route': '/tags'
       },
     ];
 
