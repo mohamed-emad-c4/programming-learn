@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../data/datasources/api_service.dart';
 import '../../../cubit/problem/tag/tags_cubit.dart';
 
 class TagsScreen extends StatefulWidget {
-  const TagsScreen({Key? key}) : super(key: key);
+  const TagsScreen({super.key});
 
   @override
   State<TagsScreen> createState() => _TagsScreenState();
@@ -13,6 +15,7 @@ class TagsScreen extends StatefulWidget {
 
 class _TagsScreenState extends State<TagsScreen> {
   String searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -27,25 +30,59 @@ class _TagsScreenState extends State<TagsScreen> {
         body: Column(
           children: [
             // Search Bar
+
             Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search Tags...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              child: Material(
+                elevation: 5,
+                shadowColor: Colors.black.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(30),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search Tags...',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade500,
+                    ),
+                    prefixIcon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: searchQuery.isEmpty
+                          ? Icon(Icons.search, color: Colors.teal.shade300)
+                          : Icon(Icons.search, color: Colors.teal),
+                    ),
+                    suffixIcon: searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon:
+                                Icon(Icons.close, color: Colors.grey.shade600),
+                            onPressed: () {
+                              setState(() {
+                                _searchController
+                                    .clear(); // Clears the TextField
+                                searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 15,
+                      horizontal: 20,
+                    ),
                   ),
-                  filled: true,
-                  fillColor: Colors.grey.shade200,
+                  onChanged: (value) {
+                    setState(() {
+                      searchQuery = value.toLowerCase();
+                    });
+                  },
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value.toLowerCase();
-                  });
-                },
               ),
             ),
+
             Expanded(
               child: BlocBuilder<TagsCubit, TagsState>(
                 builder: (context, state) {
@@ -54,7 +91,8 @@ class _TagsScreenState extends State<TagsScreen> {
                   } else if (state is TagsLoaded) {
                     // Filtered Tags
                     final filteredTags = state.tags
-                        .where((tag) => tag.name.toLowerCase().contains(searchQuery))
+                        .where((tag) =>
+                            tag.name.toLowerCase().contains(searchQuery))
                         .toList();
 
                     // Empty State
@@ -74,7 +112,8 @@ class _TagsScreenState extends State<TagsScreen> {
                       },
                       child: AnimationLimiter(
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 4, horizontal: 10),
                           itemCount: filteredTags.length,
                           itemBuilder: (context, index) {
                             final tag = filteredTags[index];
@@ -91,31 +130,94 @@ class _TagsScreenState extends State<TagsScreen> {
                                         // Navigate to details (future enhancement)
                                       },
                                       child: Card(
+                                        color: Colors.white,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(15),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
                                         ),
-                                        elevation: 5,
-                                        shadowColor: Colors.deepPurpleAccent.withOpacity(0.3),
-                                        margin: const EdgeInsets.symmetric(vertical: 10),
+                                        elevation: 4,
+                                        shadowColor:
+                                            Colors.black.withOpacity(0.2),
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 10),
                                         child: Padding(
                                           padding: const EdgeInsets.all(15.0),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                          child: Row(
                                             children: [
-                                              Text(
-                                                tag.name,
-                                                style: const TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.deepPurple,
+                                              // Display Image with Border
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                    4), // Space for border
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
+                                                  border: Border.all(
+                                                    color: Colors.teal.shade300,
+                                                    width: 2,
+                                                  ),
+                                                ),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          50), // Circular Image
+                                                  child: CachedNetworkImage(
+                                                    imageUrl: tag.imageUrl,
+                                                    width: 60,
+                                                    height: 60,
+                                                    fit: BoxFit.cover,
+                                                    placeholder:
+                                                        (context, url) =>
+                                                            const SizedBox(
+                                                      width: 60,
+                                                      height: 60,
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    ),
+                                                    errorWidget:
+                                                        (context, url, error) =>
+                                                            const CircleAvatar(
+                                                      radius: 30,
+                                                      backgroundColor:
+                                                          Colors.redAccent,
+                                                      child: Icon(
+                                                        Icons.error,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                              const SizedBox(height: 5),
-                                              Text(
-                                                tag.description,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: Colors.grey.shade700,
+                                              const SizedBox(width: 15),
+                                              // Text Details
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      tag.name,
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                        fontSize: 22,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black87,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 5),
+                                                    Text(
+                                                      tag.description,
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                        fontSize: 16,
+                                                        color: Colors
+                                                            .grey.shade600,
+                                                      ),
+                                                      maxLines: 2,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ],

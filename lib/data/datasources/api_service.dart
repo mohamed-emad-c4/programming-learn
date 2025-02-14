@@ -256,6 +256,8 @@ static Future<List<Map<String, dynamic>>> getAllChapters() async {
   Future<List<Tag>> getTags() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/problems/tags'));
+      log(response.body);
+
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
         return jsonData.map((e) => Tag.fromJson(e)).toList();
