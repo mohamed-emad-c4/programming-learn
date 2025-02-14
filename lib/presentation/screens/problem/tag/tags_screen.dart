@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -24,7 +26,7 @@ class _TagsScreenState extends State<TagsScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Tags Preview'),
-          backgroundColor: Colors.teal,
+          // backgroundColor: Colors.teal,
           elevation: 0,
         ),
         body: Column(
@@ -127,7 +129,9 @@ class _TagsScreenState extends State<TagsScreen> {
                                     cursor: SystemMouseCursors.click,
                                     child: GestureDetector(
                                       onTap: () {
-                                        // Navigate to details (future enhancement)
+                                       log(tag.id.toString());
+                                       Navigator.pushNamed(context, '/problems', arguments: tag.id);
+
                                       },
                                       child: Card(
                                         color: Colors.white,

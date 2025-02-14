@@ -3,10 +3,11 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:learn_programming/data/datasources/values.dart';
 
+import '../models/problem_model.dart';
 import '../models/tag.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.218.244:8000/api';
+  static const String baseUrl = 'http://192.168.1.2:8000/api';
 
   // تسجيل حساب جديد
   static Future<Map<String, dynamic>> register({
@@ -270,7 +271,16 @@ static Future<List<Map<String, dynamic>>> getAllChapters() async {
     }
   }
 
+Future<List<ProblemModel>> getProblemsByTag(int tagId) async {
+    final response = await http.get(Uri.parse('$baseUrl/problems/tags/$tagId/problems'));
 
+    if (response.statusCode == 200) {
+      List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => ProblemModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load problems');
+    }
+  }
 
 
 

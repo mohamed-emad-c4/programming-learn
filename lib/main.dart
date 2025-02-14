@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:learn_programming/presentation/cubit/problem/problem/problem_cubit.dart';
 
 // Domain
 import 'data/datasources/api_service.dart';
@@ -21,6 +22,7 @@ import 'presentation/screens/auth/sign_up_screen.dart';
 import 'presentation/screens/auth/reset_password_screen.dart';
 import 'presentation/screens/course/quize/quiz_submission_screen .dart';
 import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/problem/peoblem/problem_screen.dart';
 import 'presentation/screens/problem/tag/tags_screen.dart';
 import 'presentation/screens/settings_screen.dart';
 import 'presentation/screens/course/course_screen.dart';
@@ -64,15 +66,17 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthCubit>(create: (_) => GetIt.I<AuthCubit>()),
-         BlocProvider<LessonCubit>(
+        BlocProvider<LessonCubit>(
           create: (context) => LessonCubit(ApiService()),
         ),
-         BlocProvider<QuizSubmissionCubit>(
-          create: (context) => QuizSubmissionCubit(
-          ),
+        BlocProvider<QuizSubmissionCubit>(
+          create: (context) => QuizSubmissionCubit(),
         ),
-         BlocProvider<QuizResultCubit>(create: (context) => QuizResultCubit(ApiService())),
-         BlocProvider<TagsCubit>(create: (context) => TagsCubit(ApiService())),
+        BlocProvider<QuizResultCubit>(
+            create: (context) => QuizResultCubit(ApiService())),
+        BlocProvider<TagsCubit>(create: (context) => TagsCubit(ApiService())),
+        BlocProvider<ProblemCubit>(
+            create: (context) => ProblemCubit(ApiService())),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -99,40 +103,43 @@ class MyApp extends StatelessWidget {
       '/courses': (context) => CourseScreen(),
       '/chapter': (context) => ChapterScreen(courseId: 14),
       '/lessons': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments
-            as Map<String, dynamic>;
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         return LessonScreen(
           languageId: args['languageId'] as int,
           chapterNumber: args['chapterNumber'] as int,
         );
       },
-       '/view-lesson': (context) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-      return ViewLessonScreen(lessonId: args['lessonId']);
-    },
+      '/view-lesson': (context) {
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        return ViewLessonScreen(lessonId: args['lessonId']);
+      },
       '/quiz-details': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments
-            as Map<String, dynamic>;
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         return QuizDetailsScreen(lessonId: args['lessonId']);
       },
       '/quiz-submission': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments
-            as Map<String, dynamic>;
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         return QuizSubmissionScreen(
           quizId: args['quizId'],
           questions: List<Map<String, dynamic>>.from(args['questions']),
         );
       },
       '/quizResult': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments
-            as Map<String, dynamic>;
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         return QuizResultScreen(
           quizId: args['quizId'],
           token: args['token'],
           numberOfQuestions: args['numberOfQuestions'],
         );
       },
-       '/tags': (context) => const TagsScreen(),
+      '/tags': (context) => const TagsScreen(),
+      '/problems': (context) => ProblemScreen(
+          tagId: ModalRoute.of(context)!.settings.arguments as int),
     };
   }
 }
