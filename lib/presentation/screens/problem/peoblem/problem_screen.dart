@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/datasources/api_service.dart';
@@ -16,7 +15,7 @@ class ProblemScreen extends StatefulWidget {
 
 class _ProblemScreenState extends State<ProblemScreen> {
   List<ProblemModel> _filteredProblems = [];
-  bool isAscending = true; // متغير لحفظ حالة الترتيب
+  bool isAscending = true;
 
   @override
   Widget build(BuildContext context) {
@@ -45,36 +44,33 @@ class _ProblemScreenState extends State<ProblemScreen> {
               onPressed: () {
                 setState(() {
                   isAscending = !isAscending;
-                  _sortProblems(); // تحديث الترتيب
+                  _sortProblems();
                 });
               },
             ),
           ],
         ),
-        body: Expanded(
-          child: BlocBuilder<ProblemCubit, ProblemState>(
-            builder: (context, state) {
-              if (state is ProblemLoading) {
-                return _buildLoading();
-              } else if (state is ProblemLoaded) {
-                _filteredProblems = state.problems;
-                _sortProblems(); // ترتيب القائمة
-                return _filteredProblems.isNotEmpty
-                    ? _buildProblemList(_filteredProblems)
-                    : _buildEmptyState();
-              } else if (state is ProblemError) {
-                return _buildErrorState(context, state.message);
-              } else {
-                return const Center(child: Text('Something went wrong.'));
-              }
-            },
-          ),
+        body: BlocBuilder<ProblemCubit, ProblemState>(
+          builder: (context, state) {
+            if (state is ProblemLoading) {
+              return _buildShimmerLoading();
+            } else if (state is ProblemLoaded) {
+              _filteredProblems = state.problems;
+              _sortProblems();
+              return _filteredProblems.isNotEmpty
+                  ? _buildProblemList(_filteredProblems)
+                  : _buildEmptyState();
+            } else if (state is ProblemError) {
+              return _buildErrorState(context, state.message);
+            } else {
+              return const Center(child: Text('Something went wrong.'));
+            }
+          },
         ),
       ),
     );
   }
 
-  // دالة ترتيب المشاكل
   void _sortProblems() {
     if (isAscending) {
       _filteredProblems.sort((a, b) => a.level.compareTo(b.level));
@@ -83,7 +79,7 @@ class _ProblemScreenState extends State<ProblemScreen> {
     }
   }
 
-  Widget _buildLoading() {
+  Widget _buildShimmerLoading() {
     return ListView.builder(
       itemCount: 6,
       itemBuilder: (context, index) {
@@ -107,79 +103,81 @@ class _ProblemScreenState extends State<ProblemScreen> {
       itemCount: problems.length,
       itemBuilder: (context, index) {
         final problem = problems[index];
-        return GestureDetector(
-          onTap: () {
-            // Add navigation or action on tap if needed
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Material(
-              color: Colors.white,
-              elevation: 2,
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+            child: InkWell(
               borderRadius: BorderRadius.circular(20),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                splashColor: Colors.blue.withOpacity(0.1),
-                onTap: () {
-                  // Add navigation or action on tap
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        problem.title,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  '/solve_problem',
+                  arguments: problem.id,
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      problem.title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        problem.description,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      problem.description,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Chip(
-                            label: Text(
-                              'Level ${problem.level}',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: _getLevelColor(problem.level),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Chip(
+                          label: Text(
+                            'Level ${problem.level}',
+                            style: const TextStyle(color: Colors.white),
                           ),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/solve_problem', // اسم الـ Route لشاشة الحل
-                                arguments: problem.id,
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
+                          backgroundColor: _getLevelColor(problem.level),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/solve_problem',
+                              arguments: problem.id,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text('Solve',
-                                style: TextStyle(color: Colors.white)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          child: const Text(
+                            'Solve',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
