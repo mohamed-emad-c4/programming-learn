@@ -22,6 +22,7 @@ import 'presentation/screens/auth/sign_up_screen.dart';
 import 'presentation/screens/auth/reset_password_screen.dart';
 import 'presentation/screens/course/quize/quiz_submission_screen .dart';
 import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/problem/peoblem/problem_detail_screen.dart';
 import 'presentation/screens/problem/peoblem/problem_screen.dart';
 import 'presentation/screens/problem/tag/tags_screen.dart';
 import 'presentation/screens/settings_screen.dart';
@@ -140,6 +141,7 @@ class MyApp extends StatelessWidget {
       '/tags': (context) => const TagsScreen(),
       '/problems': (context) => ProblemScreen(
           tagId: ModalRoute.of(context)!.settings.arguments as int),
+       '/problem_detail': (context) => const ProblemDetailScreen(),
     };
   }
 }

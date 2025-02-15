@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/datasources/api_service.dart';
@@ -116,8 +118,12 @@ class _ProblemScreenState extends State<ProblemScreen> {
               onTap: () {
                 Navigator.pushNamed(
                   context,
-                  '/solve_problem',
-                  arguments: problem.id,
+                  '/problem_detail',
+                  arguments: {
+                    'id': problem.id,
+                    'title': problem.title,
+                    'description': problem.description,
+                  },
                 );
               },
               child: Padding(
@@ -158,12 +164,16 @@ class _ProblemScreenState extends State<ProblemScreen> {
                           onPressed: () {
                             Navigator.pushNamed(
                               context,
-                              '/solve_problem',
-                              arguments: problem.id,
+                              '/problem_detail',
+                              arguments: {
+                                'id': problem.id,
+                                'title': problem.title,
+                                'description': problem.description,
+                              },
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
+                            backgroundColor: Colors.black,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
