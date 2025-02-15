@@ -4,9 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 class ProblemDetailScreen extends StatefulWidget {
-  const ProblemDetailScreen({Key? key}) : super(key: key);
+  const ProblemDetailScreen({super.key});
 
   @override
   State<ProblemDetailScreen> createState() => _ProblemDetailScreenState();
@@ -89,14 +88,28 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
-                description,
-                style: TextStyle(
+                Container(
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
+                  ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  description,
+                  style: TextStyle(
                   fontSize: 18,
                   color: Colors.grey[800],
                   height: 1.5,
+                  ),
                 ),
-              ),
+                ),
               const SizedBox(height: 32),
 
               // Solution TextField
@@ -158,8 +171,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen>
                         },
                   child: isSubmitting
                       ? const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         )
                       : const Text(
                           'Submit',
@@ -171,28 +184,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen>
               const SizedBox(height: 20),
 
               // Attempt Button for Camera and File
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[800],
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    _showAttemptOptions();
-                  },
-                  child: const Text(
-                    'Attempt',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAttemptOptions,
+        label: const Text('Attempt', style: TextStyle(color: Colors.white)),
+        icon: const Icon(Icons.add),
+        backgroundColor: Colors.black,
       ),
     );
   }
@@ -201,25 +201,37 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen>
   void _showAttemptOptions() {
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => Container(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Text(
+              'Choose an option',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 10),
             ListTile(
-              leading: const Icon(Icons.camera_alt),
+              leading: const Icon(Icons.camera_alt, color: Colors.black),
               title: const Text('Open Camera'),
               onTap: () async {
                 Navigator.pop(context);
-              
+                // Add your camera functionality here
               },
             ),
             ListTile(
-              leading: const Icon(Icons.folder),
+              leading: const Icon(Icons.folder, color: Colors.black),
               title: const Text('Select File'),
               onTap: () async {
                 Navigator.pop(context);
-              
+                // Add your file picker functionality here
               },
             ),
           ],
