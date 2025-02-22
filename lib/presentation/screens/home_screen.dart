@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'icon': Icons.lightbulb_outline,
         'title': 'تعلم المهارات',
         'description': 'طور التفكير النقدي والإبداع.',
-        'route': '/skills'
+        'route': '/ocr'
       },
       {
         'icon': Icons.bug_report,

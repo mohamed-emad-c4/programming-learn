@@ -2,18 +2,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:learn_programming/data/datasources/values.dart';
 import 'package:learn_programming/presentation/cubit/problem/problem/problem_cubit.dart';
-
+import 'package:learn_programming/test.dart';
 // Domain
 import 'data/datasources/api_service.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'domain/repositories/auth_repository_impl.dart';
-
 // Cubit
 import 'presentation/cubit/auth/auth_cubit.dart';
-
 // Screens
 import 'presentation/cubit/lesson/lesson_cubit.dart';
+import 'presentation/cubit/problem/problem/image_cubit.dart';
 import 'presentation/cubit/problem/tag/tags_cubit.dart';
 import 'presentation/cubit/quiz/quiz_result_cubit.dart';
 import 'presentation/cubit/quiz/quiz_submission_cubit.dart';
@@ -36,6 +36,7 @@ import 'presentation/screens/course/quize/quiz_result_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _setupDependencies();
+
   runApp(const MyApp());
 }
 
@@ -78,6 +79,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<TagsCubit>(create: (context) => TagsCubit(ApiService())),
         BlocProvider<ProblemCubit>(
             create: (context) => ProblemCubit(ApiService())),
+        BlocProvider<ImageCubit>(create: (context) => ImageCubit()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -141,7 +143,8 @@ class MyApp extends StatelessWidget {
       '/tags': (context) => const TagsScreen(),
       '/problems': (context) => ProblemScreen(
           tagId: ModalRoute.of(context)!.settings.arguments as int),
-       '/problem_detail': (context) => const ProblemDetailScreen(),
+      '/problem_detail': (context) => const ProblemDetailScreen(),
+      '/ocr': (context) => GeminiScreen(),
     };
   }
 }

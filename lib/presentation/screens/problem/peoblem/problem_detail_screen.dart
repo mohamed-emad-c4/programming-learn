@@ -1,8 +1,9 @@
-// lib/presentation/screens/problem/problem/problem_detail_screen.dart
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:learn_programming/presentation/cubit/problem/problem/image_cubit.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   const ProblemDetailScreen({super.key});
@@ -11,29 +12,11 @@ class ProblemDetailScreen extends StatefulWidget {
   State<ProblemDetailScreen> createState() => _ProblemDetailScreenState();
 }
 
-class _ProblemDetailScreenState extends State<ProblemDetailScreen>
-    with SingleTickerProviderStateMixin {
+class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   late int id;
   late String title;
   late String description;
   final TextEditingController _solutionController = TextEditingController();
-  final TextEditingController _newLanguageController = TextEditingController();
-  bool isSubmitting = false;
-  bool isValidSolution = true;
-
-  String? selectedLanguage;
-  List<String> programmingLanguages = [
-    'C++',
-    'Java',
-    'Python',
-    'JavaScript',
-    'Dart',
-    'Add New Language'
-  ];
-
-  // File and Image Variables
-  File? _selectedImage;
-  File? _selectedFile;
 
   @override
   void didChangeDependencies() {
@@ -47,195 +30,147 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen>
   @override
   void dispose() {
     _solutionController.dispose();
-    _newLanguageController.dispose();
     super.dispose();
+  }
+
+  void _submitSolution() {
+    final solution = _solutionController.text.trim();
+    if (solution.isNotEmpty) {
+      // هنا ممكن تضيف كود إرسال الحل للسيرفر أو تخزينه في قاعدة البيانات
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Solution Submitted Successfully!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a solution before submitting!')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          'Problem Detail',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
+    return BlocProvider(
+      create: (_) => ImageCubit(),
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: Colors.black),
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
+        appBar: AppBar(
+          title: const Text('Problem Detail', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+          backgroundColor: Colors.white,
+          elevation: 1,
+          iconTheme: const IconThemeData(color: Colors.black),
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
+        ),
+        body: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title Animation
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Text(
-                  title,
-                  key: ValueKey(title),
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
+              Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
               const SizedBox(height: 16),
-                Container(
+              Container(
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: Offset(0, 5),
-                  ),
-                  ],
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: Offset(0, 5))],
                 ),
                 padding: const EdgeInsets.all(16),
-                child: Text(
-                  description,
-                  style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey[800],
-                  height: 1.5,
-                  ),
-                ),
-                ),
+                child: Text(description, style: const TextStyle(fontSize: 18, color: Colors.black87, height: 1.5)),
+              ),
               const SizedBox(height: 32),
-
-              // Solution TextField
-              TextField(
-                controller: _solutionController,
-                maxLines: null,
-                onChanged: (value) {
-                  setState(() {
-                    isValidSolution = value.trim().isNotEmpty;
-                  });
+              BlocConsumer<ImageCubit, ImageState>(
+                listener: (context, state) {
+                  if (state is ImageUploaded) {
+                    _solutionController.text = state.response;
+                  }
                 },
-                decoration: InputDecoration(
-                  labelText: 'Your Solution',
-                  hintText: 'Write your solution here...',
-                  errorText:
-                      isValidSolution ? null : 'Solution cannot be empty',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Submit Button
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: isSubmitting
-                      ? null
-                      : () {
-                          if (_solutionController.text.trim().isEmpty) {
-                            setState(() {
-                              isValidSolution = false;
-                            });
-                          } else {
-                            setState(() {
-                              isSubmitting = true;
-                            });
-
-                            // Simulating submission delay
-                            Future.delayed(const Duration(seconds: 2), () {
-                              setState(() {
-                                isSubmitting = false;
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Solution Submitted!'),
-                                ),
-                              );
-                            });
-                          }
-                        },
-                  child: isSubmitting
-                      ? const CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        )
-                      : const Text(
-                          'Submit',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                builder: (context, state) {
+                  return Column(
+                    children: [
+                      TextField(
+                        controller: _solutionController,
+                        maxLines: null,
+                        style: const TextStyle(color: Colors.black),
+                        decoration: InputDecoration(
+                          labelText: 'Your Solution',
+                          labelStyle: const TextStyle(color: Colors.black),
+                          hintText: 'Write your solution or use AI...',
+                          hintStyle: const TextStyle(color: Colors.black54),
+                          filled: true,
+                          fillColor: Colors.grey[200],
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                         ),
-                ),
+                      ),
+                      const SizedBox(height: 20),
+                      if (state is ImagePicked)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black, width: 2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Image.file(File(state.image.path), height: 150, fit: BoxFit.cover),
+                          ),
+                        ),
+                      if (state is ImageUploading)
+                        const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: CircularProgressIndicator(color: Colors.black),
+                        ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildButton(
+                            icon: Icons.image,
+                            label: 'Gallery',
+                            onTap: () => context.read<ImageCubit>().pickImage(ImageSource.gallery),
+                          ),
+                          _buildButton(
+                            icon: Icons.camera,
+                            label: 'Camera',
+                            onTap: () => context.read<ImageCubit>().pickImage(ImageSource.camera),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      _buildSubmitButton(),
+                    ],
+                  );
+                },
               ),
-
-              const SizedBox(height: 20),
-
-              // Attempt Button for Camera and File
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAttemptOptions,
-        label: const Text('Attempt', style: TextStyle(color: Colors.white)),
-        icon: const Icon(Icons.add),
-        backgroundColor: Colors.black,
+    );
+  }
+
+  Widget _buildButton({required IconData icon, required String label, required VoidCallback onTap}) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, color: Colors.black),
+      label: Text(label, style: const TextStyle(color: Colors.black)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        side: const BorderSide(color: Colors.black, width: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       ),
     );
   }
 
-  // Show Bottom Sheet for Camera and File Picker
-  void _showAttemptOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Choose an option',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 10),
-            ListTile(
-              leading: const Icon(Icons.camera_alt, color: Colors.black),
-              title: const Text('Open Camera'),
-              onTap: () async {
-                Navigator.pop(context);
-                // Add your camera functionality here
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.folder, color: Colors.black),
-              title: const Text('Select File'),
-              onTap: () async {
-                Navigator.pop(context);
-                // Add your file picker functionality here
-              },
-            ),
-          ],
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _submitSolution,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
+        child: const Text('Submit Solution', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'dart:developer';
+import 'dart:io';
 
+import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/datasources/api_service.dart';
@@ -88,6 +90,10 @@ Future<String?> getToken() async {
 Future<bool> validateToken(String token) async {
   try {
     return await ApiService.verifyToken(token); // استخدام الدالة الجديدة
+  } on ClientException catch (e) {
+    throw Exception('فشل في التحقق من صحة الـ token: ClientException: $e');
+  } on SocketException catch (e) {
+    throw Exception('فشل في التحقق من صحة الـ token: SocketException: $e');
   } catch (e) {
     throw Exception('فشل في التحقق من صحة الـ token: $e');
   }

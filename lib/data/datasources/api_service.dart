@@ -7,7 +7,7 @@ import '../models/problem_model.dart';
 import '../models/tag.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.2:8000/api';
+  static const String baseUrl = 'http://192.168.1.4:8000/api';
 
   // تسجيل حساب جديد
   static Future<Map<String, dynamic>> register({
