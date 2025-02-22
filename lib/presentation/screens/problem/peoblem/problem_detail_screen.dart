@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:learn_programming/presentation/cubit/problem/problem/image_cubit.dart';
+import 'package:learn_programming/presentation/screens/problem/peoblem/result/error_screen.dart';
+import 'package:learn_programming/presentation/screens/problem/peoblem/result/success_screen.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   const ProblemDetailScreen({super.key});
@@ -33,19 +35,37 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     super.dispose();
   }
 
-  void _submitSolution() {
-    final solution = _solutionController.text.trim();
-    if (solution.isNotEmpty) {
-      // هنا ممكن تضيف كود إرسال الحل للسيرفر أو تخزينه في قاعدة البيانات
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solution Submitted Successfully!')),
+void _submitSolution() async {
+  final solution = _solutionController.text.trim();
+
+  if (solution.isNotEmpty) {
+    final cubit = ImageCubit();
+    final result = await cubit.checkCodeWithGemini(solution);
+
+    if (result == true) {
+      // الانتقال إلى شاشة النجاح
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SuccessScreen(),
+        ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a solution before submitting!')),
+      // الانتقال إلى شاشة الأخطاء مع إرسال الخطأ
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ErrorScreen(errorMessage: result),
+        ),
       );
     }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('⚠️ Please enter a solution before submitting!')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

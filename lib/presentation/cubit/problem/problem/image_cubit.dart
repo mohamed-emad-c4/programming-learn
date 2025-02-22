@@ -46,11 +46,42 @@ class ImageCubit extends Cubit<ImageState> {
       ];
 
       final response = await model.generateContent(content);
-      log(response.text.toString());
+      final extractedText = response.text ?? 'No response from AI';
 
-      emit(ImageUploaded(response.text ?? 'No response from AI'));
+      log(extractedText);
+      emit(ImageUploaded(extractedText));
     } catch (e) {
       emit(ImageError('Error processing image: $e'));
+    }
+  }
+
+  Future<dynamic> checkCodeWithGemini(String code) async {
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-1.5-flash-latest',
+        apiKey: apiKey,
+      );
+
+      final prompt = """
+        Analyze the following code and check if it contains any errors.
+        - If the code is correct, respond with: `true`
+        - If there are errors, provide a detailed explanation using Markdown format.
+
+        ```
+        $code
+        ```
+      """;
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      final result = response.text?.trim() ?? '';
+
+      if (result.toLowerCase() == 'true') {
+        return true;
+      } else {
+        return result; // Return Markdown-formatted error message
+      }
+    } catch (e) {
+      return 'Error checking code: $e';
     }
   }
 }
