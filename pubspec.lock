@@ -352,6 +352,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  font_awesome_flutter:
+    dependency: "direct main"
+    description:
+      name: font_awesome_flutter
+      sha256: d3a89184101baec7f4600d58840a764d2ef760fe1c5a20ef9e6b0e9b24a07a3a
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.8.0"
   get_it:
     dependency: "direct main"
     description:
@@ -360,6 +368,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.7.0"
+  glass:
+    dependency: "direct main"
+    description:
+      name: glass
+      sha256: "444684d73df51782d3d9e0dec7cb37fbe1f4a1456e1dc591663966ab37c4cd0e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0+2"
+  glassmorphism:
+    dependency: "direct main"
+    description:
+      name: glassmorphism
+      sha256: c0f65ea2681d4ee6d4125b947946d983335cd44765e835cdc039894b076a6e31
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   google_fonts:
     dependency: "direct main"
     description:
