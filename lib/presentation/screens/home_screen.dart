@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontSize: 24,
                 color: Colors.white)),
         centerTitle: true,
-        backgroundColor: Colors.green[900],
+        backgroundColor: Colors.blue.shade700,
         elevation: 0,
         actions: [
           IconButton(

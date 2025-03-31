@@ -156,7 +156,7 @@ class CourseScreen extends StatelessWidget {
   Widget _buildCourseGrid(CourseLoaded state) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth > 600;
+        final isWideScreen = constraints.maxWidth > 1000;
         return Padding(
           padding: const EdgeInsets.all(12),
           child: GridView.builder(
@@ -205,10 +205,7 @@ class CourseScreen extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.6)
-                    ],
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -242,13 +239,15 @@ class CourseScreen extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
                     children: [
-                      _infoTag(Icons.category, course['category'] ?? 'غير محدد'),
-                      _infoTag(Icons.language, course['language'] ?? 'غير محدد'),
+                      _infoTag(
+                          Icons.category, course['category'] ?? 'غير محدد'),
+                      _infoTag(
+                          Icons.language, course['language'] ?? 'غير محدد'),
                     ],
                   ),
                 ],
