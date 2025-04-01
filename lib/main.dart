@@ -104,7 +104,11 @@ class MyApp extends StatelessWidget {
       '/reset-password': (context) => ResetPasswordScreen(),
       '/settings': (context) => SettingsScreen(),
       '/courses': (context) => CourseScreen(),
-      '/chapter': (context) => ChapterScreen(courseId: 14),
+      '/chapter': (context) {
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        return ChapterScreen(courseId: args['courseId']);
+      },
       '/lessons': (context) {
         final args =
             ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;

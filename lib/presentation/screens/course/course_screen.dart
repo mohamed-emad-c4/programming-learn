@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:learn_programming/presentation/screens/course/chapter_screen.dart';
@@ -14,7 +16,7 @@ class CourseScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
-            '📚 الدورات التدريبية',
+            'courses ',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 22,
@@ -69,7 +71,7 @@ class CourseScreen extends StatelessWidget {
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 0.75,
+          childAspectRatio: 0.8,
         ),
         itemCount: 6,
         itemBuilder: (context, index) {
@@ -84,26 +86,21 @@ class CourseScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    height: 120,
-                    color: Colors.white,
-                  ),
+                  Container(height: 120, color: Colors.white),
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          height: 16,
-                          width: double.infinity,
-                          color: Colors.white,
-                        ),
+                            height: 16,
+                            width: double.infinity,
+                            color: Colors.white),
                         const SizedBox(height: 8),
                         Container(
-                          height: 12,
-                          width: double.infinity,
-                          color: Colors.white,
-                        ),
+                            height: 12,
+                            width: double.infinity,
+                            color: Colors.white),
                       ],
                     ),
                   ),
@@ -116,70 +113,29 @@ class CourseScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, CourseError state) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 48),
-          const SizedBox(height: 16),
-          Text(
-            state.message,
-            style: const TextStyle(color: Colors.red, fontSize: 16),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => context.read<CourseCubit>().fetchCourses(),
-            child: const Text('إعادة المحاولة'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          const Text(
-            'لا توجد دورات متاحة.',
-            style: TextStyle(fontSize: 18, color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildCourseGrid(CourseLoaded state) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth > 1000;
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isWideScreen ? 3 : 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.75,
-            ),
-            itemCount: state.courses.length,
-            itemBuilder: (context, index) {
-              final course = state.courses[index];
-              return _buildCourseCard(context, course);
-            },
-          ),
-        );
-      },
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 2,
+          mainAxisSpacing: 8,
+          childAspectRatio: 0.75,
+        ),
+        itemCount: state.courses.length,
+        itemBuilder: (context, index) {
+          final course = state.courses[index];
+          return _buildCourseCard(context, course);
+        },
+      ),
     );
   }
 
   Widget _buildCourseCard(BuildContext context, Map<String, dynamic> course) {
     return GestureDetector(
       onTap: () {
+        log('Course ID: ${course['id']}');
         Navigator.pushNamed(
           context,
           '/chapter',
@@ -187,70 +143,86 @@ class CourseScreen extends StatelessWidget {
         );
       },
       child: Card(
-        elevation: 4,
+        elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Course Image with Gradient Overlay
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(course['image_url'] ?? ''),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+            Stack(
+              children: [
+                Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(course['image_url'] ?? ''),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-                alignment: Alignment.bottomCenter,
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  course['name'],
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.6)
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
                 ),
-              ),
+                Positioned(
+                  bottom: 8,
+                  left: 8,
+                  right: 8,
+                  child: Text(
+                    course['name'],
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                  ),
+                ),
+              ],
             ),
             // Course Info
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    course['description'] ?? 'لا يوجد وصف',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.black87,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        course['description'] ?? 'لا يوجد وصف',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      _infoTag(
-                          Icons.category, course['category'] ?? 'غير محدد'),
-                      _infoTag(
-                          Icons.language, course['language'] ?? 'غير محدد'),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        _infoTag(
+                            Icons.category, course['category'] ?? 'غير محدد'),
+                        _infoTag(
+                            Icons.language, course['language'] ?? 'غير محدد'),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -275,10 +247,49 @@ class CourseScreen extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(color: Colors.white, fontSize: 11),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+Widget _buildErrorState(BuildContext context, CourseError state) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.error_outline, color: Colors.red, size: 48),
+        const SizedBox(height: 16),
+        Text(
+          state.message,
+          style: const TextStyle(color: Colors.red, fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () => context.read<CourseCubit>().fetchCourses(),
+          child: const Text('🔄 إعادة المحاولة'),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildEmptyState() {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
+        const SizedBox(height: 16),
+        const Text(
+          '❌ لا توجد دورات متاحة.',
+          style: TextStyle(fontSize: 18, color: Colors.grey),
+        ),
+      ],
+    ),
+  );
 }
