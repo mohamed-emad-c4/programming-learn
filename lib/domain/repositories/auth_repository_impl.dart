@@ -90,12 +90,9 @@ Future<String?> getToken() async {
 Future<bool> validateToken(String token) async {
   try {
     return await ApiService.verifyToken(token); // استخدام الدالة الجديدة
-  } on ClientException catch (e) {
-    throw Exception('فشل في التحقق من صحة الـ token: ClientException: $e');
-  } on SocketException catch (e) {
-    throw Exception('فشل في التحقق من صحة الـ token: SocketException: $e');
-  } catch (e) {
-    throw Exception('فشل في التحقق من صحة الـ token: $e');
+  } on Exception catch (e) {
+    log('فشل في التحقق من صحة الـ token: $e');
+    return false;
   }
 }
 

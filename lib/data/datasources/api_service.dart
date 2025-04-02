@@ -139,20 +139,23 @@ class ApiService {
   }
 
   static Future<bool> verifyToken(String token) async {
-    final url = Uri.parse('$baseUrl/users/verify-token'); // Ensure correct path
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/users/verify-token'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    final response = await http.get(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token', // Token in header
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['is_valid']; // Returns true if valid
-    } else {
-      return false; // Token is invalid
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['is_valid'];
+      } else {
+        return false;
+      }
+    } catch (e) {
+      log('Failed to verify token: $e');
+      return false;
     }
   }
 

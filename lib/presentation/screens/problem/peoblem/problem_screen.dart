@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/datasources/api_service.dart';
@@ -25,23 +23,20 @@ class _ProblemScreenState extends State<ProblemScreen> {
       create: (_) =>
           ProblemCubit(ApiService())..fetchProblemsByTag(widget.tagId),
       child: Scaffold(
+        backgroundColor: Colors.blue[50], // لون الخلفية الأزرق الفاتح
         appBar: AppBar(
           title: const Text(
             'Problems',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
-          backgroundColor: Colors.white,
-          elevation: 0.5,
+          backgroundColor: Colors.blue,
+          elevation: 2,
           centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.black87),
           actions: [
             IconButton(
               icon: Icon(
                 isAscending ? Icons.arrow_upward : Icons.arrow_downward,
-                color: Colors.black87,
+                color: Colors.white,
               ),
               onPressed: () {
                 setState(() {
@@ -74,11 +69,9 @@ class _ProblemScreenState extends State<ProblemScreen> {
   }
 
   void _sortProblems() {
-    if (isAscending) {
-      _filteredProblems.sort((a, b) => a.level.compareTo(b.level));
-    } else {
-      _filteredProblems.sort((a, b) => b.level.compareTo(a.level));
-    }
+    _filteredProblems.sort((a, b) => isAscending
+        ? a.level.compareTo(b.level)
+        : b.level.compareTo(a.level));
   }
 
   Widget _buildShimmerLoading() {
@@ -101,99 +94,109 @@ class _ProblemScreenState extends State<ProblemScreen> {
   }
 
   Widget _buildProblemList(List<ProblemModel> problems) {
-    return ListView.builder(
-      itemCount: problems.length,
-      itemBuilder: (context, index) {
-        final problem = problems[index];
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Material(
-            elevation: 4,
-            borderRadius: BorderRadius.circular(20),
-            color: Colors.white,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(20),
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  '/problem_detail',
-                  arguments: {
-                    'id': problem.id,
-                    'title': problem.title,
-                    'description': problem.description,
-                  },
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: CustomScrollView(
+        slivers: [
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final problem = problems[index];
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Material(
+                    elevation: 4,
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/problem_detail',
+                          arguments: {
+                            'id': problem.id,
+                            'title': problem.title,
+                            'description': problem.description,
+                          },
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              problem.title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              problem.description,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Chip(
+                                  label: Text(
+                                    'Level ${problem.level}',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor: _getLevelColor(problem.level),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/problem_detail',
+                                      arguments: {
+                                        'id': problem.id,
+                                        'title': problem.title,
+                                        'description': problem.description,
+                                      },
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 24, vertical: 12),
+                                  ),
+                                  child: const Text(
+                                    'Solve',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 );
               },
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      problem.title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      problem.description,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Chip(
-                          label: Text(
-                            'Level ${problem.level}',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: _getLevelColor(problem.level),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/problem_detail',
-                              arguments: {
-                                'id': problem.id,
-                                'title': problem.title,
-                                'description': problem.description,
-                              },
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                          ),
-                          child: const Text(
-                            'Solve',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              childCount: problems.length,
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -208,7 +211,7 @@ class _ProblemScreenState extends State<ProblemScreen> {
       case 4:
         return Colors.purple;
       default:
-        return Colors.blueGrey;
+        return Colors.blue;
     }
   }
 
@@ -250,7 +253,7 @@ class _ProblemScreenState extends State<ProblemScreen> {
               context.read<ProblemCubit>().fetchProblemsByTag(widget.tagId);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueAccent,
+              backgroundColor: Colors.blue,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
