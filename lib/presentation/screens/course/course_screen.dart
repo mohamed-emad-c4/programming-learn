@@ -18,6 +18,7 @@ class CourseScreen extends StatelessWidget {
           title: const Text(
             'courses ',
             style: TextStyle(
+              color: Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 22,
             ),

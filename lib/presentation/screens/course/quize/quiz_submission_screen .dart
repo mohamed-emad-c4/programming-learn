@@ -9,7 +9,8 @@ class QuizSubmissionScreen extends StatefulWidget {
   final int quizId;
   final List<Map<String, dynamic>> questions;
 
-  QuizSubmissionScreen({super.key, required this.quizId, required this.questions});
+  const QuizSubmissionScreen(
+      {super.key, required this.quizId, required this.questions});
 
   @override
   _QuizSubmissionScreenState createState() => _QuizSubmissionScreenState();
@@ -40,8 +41,12 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Answer Quiz'),
-        backgroundColor: Colors.teal,
+        title: const Text('Answer Quiz',
+            style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white)),
+        backgroundColor: Colors.blue[800], // Blue color for the app bar
         centerTitle: true,
       ),
       body: BlocProvider(
@@ -69,7 +74,7 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen> {
             }
           },
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             itemCount: widget.questions.length,
             itemBuilder: (context, index) {
               final question = widget.questions[index];
@@ -78,6 +83,7 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
+                elevation: 6, // Slightly increased elevation for better shadow
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -88,22 +94,64 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen> {
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.teal,
+                          color: Colors.blue, // Blue color for question text
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      ...List.generate(
-                        question['options'].length,
-                        (optionIndex) => RadioListTile<int>(
-                          title: Text(question['options'][optionIndex]),
-                          value: optionIndex,
-                          groupValue: _selectedAnswers[question['id']],
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedAnswers[question['id']] = value!;
-                            });
-                          },
-                        ),
+                      const SizedBox(height: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ...List.generate(
+                            question['options'].length,
+                            (optionIndex) => GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedAnswers[question['id']] =
+                                      optionIndex;
+                                });
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: _selectedAnswers[question['id']] ==
+                                          optionIndex
+                                      ? Colors.blue[100]
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _selectedAnswers[question['id']] ==
+                                            optionIndex
+                                        ? Colors.blue
+                                        : Colors.grey[300]!,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      _selectedAnswers[question['id']] ==
+                                              optionIndex
+                                          ? Icons.radio_button_checked
+                                          : Icons.radio_button_unchecked,
+                                      color: _selectedAnswers[question['id']] ==
+                                              optionIndex
+                                          ? Colors.blue
+                                          : Colors.grey,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        question['options'][optionIndex],
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -115,12 +163,13 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: submitAnswers,
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.blue[800], // Blue color for the floating button
         label: const Text(
           'Submit Answers',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        icon: const Icon(Icons.send),
+        icon: const Icon(Icons.send, color: Colors.white),
       ),
     );
   }

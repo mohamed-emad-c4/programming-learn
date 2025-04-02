@@ -6,25 +6,42 @@ import '../../../cubit/quiz/quiz_details_cubit.dart';
 class QuizDetailsScreen extends StatelessWidget {
   final int lessonId;
 
-  const QuizDetailsScreen({Key? key, required this.lessonId}) : super(key: key);
+  const QuizDetailsScreen({super.key, required this.lessonId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => QuizDetailsCubit(ApiService())..fetchQuizzes(lessonId),
+      create: (context) =>
+          QuizDetailsCubit(ApiService())..fetchQuizzes(lessonId),
       child: Scaffold(
-        backgroundColor: Colors.grey[200],
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          title: const Text('Quiz Details'),
-          backgroundColor: Colors.teal,
+          title: const Text('Quiz Details',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+              )),
+          backgroundColor: Colors.white,
           centerTitle: true,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue.shade900, Colors.blue.shade300],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
         ),
         body: BlocBuilder<QuizDetailsCubit, QuizDetailsState>(
           builder: (context, state) {
             if (state is QuizDetailsLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is QuizDetailsError) {
-              return Center(child: Text('Error: ${state.message}'));
+              return Center(
+                  child: Text('Error: ${state.message}',
+                      style: TextStyle(color: Colors.red, fontSize: 16)));
             } else if (state is QuizDetailsLoaded) {
               final quizzes = state.quizzes;
               return ListView.builder(
@@ -32,11 +49,11 @@ class QuizDetailsScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final quiz = quizzes[index];
                   return AnimatedContainer(
-                    duration: Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
+                          horizontal: 4, vertical: 50),
                       child: QuizCard(quiz: quiz),
                     ),
                   );
@@ -55,16 +72,17 @@ class QuizDetailsScreen extends StatelessWidget {
 class QuizCard extends StatelessWidget {
   final Map<String, dynamic> quiz;
 
-  const QuizCard({Key? key, required this.quiz}) : super(key: key);
+  const QuizCard({super.key, required this.quiz});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       color: Colors.white,
-      elevation: 4,
+      elevation: 6,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
       ),
+      shadowColor: Colors.blue.withOpacity(0.3),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -73,15 +91,15 @@ class QuizCard extends StatelessWidget {
             Text(
               quiz['title'],
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color: Colors.teal,
+                color: Colors.blue,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               quiz['description'] ?? 'No description available.',
-              style: const TextStyle(fontSize: 16, color: Colors.black87),
+              style: const TextStyle(fontSize: 16, color: Colors.black54),
             ),
             const SizedBox(height: 20),
             Row(
@@ -97,12 +115,14 @@ class QuizCard extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => navigateToQuiz(context, quiz),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 30, vertical: 14),
+                  backgroundColor: Colors.blue,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  shadowColor: Colors.blue.withOpacity(0.3),
+                  elevation: 5,
                 ),
                 child: const Text(
                   'Start Quiz',
@@ -124,8 +144,15 @@ class QuizCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.teal.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(14),
+        color: Colors.blue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.1),
+            offset: Offset(0, 4),
+            blurRadius: 6,
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -134,7 +161,7 @@ class QuizCard extends StatelessWidget {
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: Colors.teal,
+              color: Colors.blue,
             ),
           ),
           const SizedBox(height: 6),

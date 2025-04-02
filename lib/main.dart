@@ -27,7 +27,7 @@ import 'presentation/screens/problem/peoblem/problem_screen.dart';
 import 'presentation/screens/problem/tag/tags_screen.dart';
 import 'presentation/screens/settings_screen.dart';
 import 'presentation/screens/course/course_screen.dart';
-import 'presentation/screens/course/chapter_screen.dart';
+import 'presentation/screens/course/chapter_screen.dart'; // Ensure this file contains the ChapterScreen class
 import 'presentation/screens/course/lesson/lesson_screen.dart';
 import 'presentation/screens/course/lesson/view_lesson_screen.dart';
 import 'presentation/screens/course/quize/quiz_details_screen.dart';

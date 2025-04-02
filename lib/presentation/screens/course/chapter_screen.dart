@@ -1,4 +1,6 @@
 /* --- Begin lib\presentation\screens\course\chapter_screen.dart --- */
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -201,7 +203,7 @@ class ChapterScreen extends StatelessWidget {
             color: accentColor, // Use accent theme color
           ),
         ),
-        const SizedBox(height: 15),
+        const SizedBox(height: 10),
         ListView.builder(
           shrinkWrap: true, // Important inside Column/SliverList
           physics:
@@ -246,6 +248,7 @@ class ChapterScreen extends StatelessWidget {
         // InkWell provides ripple effect on tap
         borderRadius: BorderRadius.circular(12.0),
         onTap: () {
+          log('Chapter ID: ${chapter['id']}'); // Log chapter ID
           Navigator.pushNamed(context, '/lessons', arguments: {
             'languageId': courseId, // Ensure courseId is accessible here
             'chapterNumber': chapter['id'], // Use chapter ID from data
