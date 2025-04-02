@@ -65,7 +65,7 @@ class ImageCubit extends Cubit<ImageState> {
       final prompt = """
         Analyze the following code and check if it contains any errors.
         - If the code is correct, respond with: `true`
-        - If there are errors, provide a detailed explanation using Markdown format.
+        - If there are errors, provide a detailed explanation using Markdown format dont send all code.
 
         ```
         $code

@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,13 +42,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     if (solution.isNotEmpty) {
       final cubit = ImageCubit();
       final result = await cubit.checkCodeWithGemini(solution);
-
+      log(result.toString());
       if (result == true) {
         // Navigate to success screen
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const SuccessScreen(),
+            builder: (context) =>  SuccessScreen( message: result.toString(),),
           ),
         );
       } else {
@@ -56,7 +57,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => ErrorScreen(
-              errorMessage: 'Solution is incorrect, please try again!',
+              errorMessage: 'Error: $result',
             ),
           ),
         );
@@ -64,7 +65,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('⚠️ Solution field cannot be empty. Please enter your solution.'),
+          content: Text(
+              '⚠️ Solution field cannot be empty. Please enter your solution.'),
         ),
       );
     }
@@ -77,7 +79,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text('Problem Detail', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          title: const Text('Problem Detail',
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
           backgroundColor: Colors.blue.shade800,
           elevation: 1,
           iconTheme: const IconThemeData(color: Colors.black),
@@ -88,7 +92,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black)),
               const SizedBox(height: 16),
               _buildDescriptionCard(),
               const SizedBox(height: 32),
@@ -126,11 +134,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5)),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5)),
         ],
       ),
       padding: const EdgeInsets.all(16),
-      child: Text(description, style: const TextStyle(fontSize: 18, color: Colors.black87, height: 1.5)),
+      child: Text(description,
+          style: const TextStyle(
+              fontSize: 18, color: Colors.black87, height: 1.5)),
     );
   }
 
@@ -162,7 +175,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           border: Border.all(color: Colors.black, width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Image.file(File(state.image.path), height: 150, fit: BoxFit.cover),
+        child:
+            Image.file(File(state.image.path), height: 150, fit: BoxFit.cover),
       ),
     );
   }
@@ -181,7 +195,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         _buildButton(
           icon: Icons.image,
           label: 'Gallery',
-          onTap: () => context.read<ImageCubit>().pickImage(ImageSource.gallery),
+          onTap: () =>
+              context.read<ImageCubit>().pickImage(ImageSource.gallery),
         ),
         _buildButton(
           icon: Icons.camera,
@@ -192,7 +207,10 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  Widget _buildButton({required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _buildButton(
+      {required IconData icon,
+      required String label,
+      required VoidCallback onTap}) {
     return ElevatedButton.icon(
       onPressed: onTap,
       icon: Icon(icon, color: Colors.blue),
@@ -214,9 +232,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        child: const Text('Submit Solution', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        child: const Text('Submit Solution',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
       ),
     );
   }
