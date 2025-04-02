@@ -16,7 +16,7 @@ class Tag {
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      imageUrl: json['image_url'] ?? 'assets/images/fallback.jpg',
+      imageUrl: json['url_image'] ?? 'assets/images/fallback.jpg',
     );
   }
 }
