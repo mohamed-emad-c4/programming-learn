@@ -1,0 +1,1 @@
+C:\Users\zemax\Desktop\projects\learn_programming\build\app\intermediates\cxx\RelWithDebInfo\2d4c6do3\obj\arm64-v8a

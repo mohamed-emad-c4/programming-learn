@@ -7,7 +7,7 @@ import '../models/problem_model.dart';
 import '../models/tag.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.4:8000/api';
+  static const String baseUrl = 'https://elearn-backend-soe2.onrender.com/api';
 
   // تسجيل حساب جديد
   static Future<Map<String, dynamic>> register({
@@ -24,11 +24,11 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'name': name,
-        'nickname': nickname,
-        'country': country,
+        'username': nickname,
+        // 'country': country,
         'email': email,
         'password': password,
-        'role': role,
+        'role': "student",
       }),
     );
     log('Error: ${response.body}');
@@ -59,8 +59,10 @@ class ApiService {
         'client_secret': '',
       },
     );
+    log('Error: ${response.body}');
 
     if (response.statusCode == 200) {
+      // log('Login successful: ${response.body}');
       return jsonDecode(response.body); // يعيد الـ token كـ Map
     } else if (response.statusCode == 422) {
       throw Exception('Validation Error: ${response.body}');

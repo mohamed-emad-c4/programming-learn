@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _usernameController,
                       style: TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        labelText: 'Username',
+                        labelText: 'Email',
                         labelStyle:
                             TextStyle(color: Colors.white.withOpacity(0.7)),
                         prefixIcon: Icon(Icons.person, color: Colors.white),

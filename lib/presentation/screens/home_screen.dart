@@ -24,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        leading: null,
         title: const Text('Learning Hub',
             style: TextStyle(
                 fontWeight: FontWeight.bold,

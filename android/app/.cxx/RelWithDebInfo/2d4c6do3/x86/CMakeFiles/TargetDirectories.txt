@@ -1,0 +1,2 @@
+C:/Users/zemax/Desktop/projects/learn_programming/android/app/.cxx/RelWithDebInfo/2d4c6do3/x86/CMakeFiles/edit_cache.dir
+C:/Users/zemax/Desktop/projects/learn_programming/android/app/.cxx/RelWithDebInfo/2d4c6do3/x86/CMakeFiles/rebuild_cache.dir
