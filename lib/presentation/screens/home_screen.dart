@@ -21,52 +21,142 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        leading: null,
-        title: const Text('Learning Hub',
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-                color: Colors.white)),
-        centerTitle: true,
-        backgroundColor: Colors.blue.shade700,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () => _navigateToSettings(context),
-          ),
-        ],
-      ),
+      backgroundColor: theme.colorScheme.surface,
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
           if (state is AuthLoading) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
               ),
             );
           }
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
-                child: Text(
-                  'What would you like to learn today?',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 180.0,
+                floating: false,
+                pinned: true,
+                backgroundColor: theme.colorScheme.primary,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    'Learning Hub',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary,
+                          theme.colorScheme.primaryContainer,
+                        ],
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          right: -50,
+                          top: -50,
+                          child: Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: theme.colorScheme.primary.withOpacity(0.2),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: -30,
+                          bottom: -30,
+                          child: Container(
+                            width: 150,
+                            height: 150,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: theme.colorScheme.primaryContainer
+                                  .withOpacity(0.3),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.settings,
+                        color: theme.colorScheme.onPrimary),
+                    onPressed: () => _navigateToSettings(context),
+                  ),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome back!',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(duration: 600.ms)
+                          .slideX(begin: -30, end: 0),
+                      const SizedBox(height: 8),
+                      Text(
+                        'What would you like to learn today?',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(duration: 600.ms, delay: 200.ms)
+                          .slideX(begin: -30, end: 0),
+                    ],
                   ),
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildGridSection(context),
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.1,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final item = _items[index];
+                      return _buildCard(
+                        context: context,
+                        icon: item['icon'] as IconData,
+                        title: item['title'] as String,
+                        description: item['description'] as String,
+                        color: item['color'] as Color,
+                        onTap: () => Navigator.pushNamed(
+                            context, item['route'] as String),
+                        delay: 100 * (index + 1),
+                      );
+                    },
+                    childCount: _items.length,
+                  ),
                 ),
               ),
             ],
@@ -76,89 +166,65 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  static final List<Map<String, dynamic>> _items = [
+    {
+      'icon': Icons.computer,
+      'title': 'Computer Basics',
+      'description': 'Learn hardware and software fundamentals',
+      'route': '/course-detail',
+      'color': Colors.indigo,
+    },
+    {
+      'icon': Icons.code,
+      'title': 'Programming',
+      'description': 'Python, Java, C++ and more',
+      'route': '/courses',
+      'color': Colors.teal,
+    },
+    {
+      'icon': Icons.lightbulb_outline,
+      'title': 'Skill Development',
+      'description': 'Enhance critical thinking',
+      'route': '/ocr',
+      'color': Colors.orange,
+    },
+    {
+      'icon': Icons.bug_report,
+      'title': 'Problem Solving',
+      'description': 'Practice algorithms',
+      'route': '/tags',
+      'color': Colors.pink,
+    },
+    {
+      'icon': Icons.data_object,
+      'title': 'Data Structures',
+      'description': 'Master core concepts',
+      'route': '/data-structures',
+      'color': Colors.purple,
+    },
+    {
+      'icon': Icons.security,
+      'title': 'Cyber Security',
+      'description': 'Learn protection techniques',
+      'route': '/security',
+      'color': Colors.blue,
+    },
+  ];
+
   void _navigateToSettings(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => BlocProvider.value(
           value: context.read<AuthCubit>(),
-          child: SettingsScreen(),
+          child: const SettingsScreen(),
         ),
       ),
-    ).then((_) => setState(() {})); // Refresh when returning from settings
-  }
-
-  Widget _buildGridSection(BuildContext context) {
-    final items = [
-      {
-        'icon': Icons.computer,
-        'title': 'Computer Basics',
-        'description': 'Learn hardware and software fundamentals',
-        'route': '/course-detail',
-        'color': Colors.indigo,
-      },
-      {
-        'icon': Icons.code,
-        'title': 'Programming',
-        'description': 'Python, Java, C++ and more',
-        'route': '/courses',
-        'color': Colors.teal,
-      },
-      {
-        'icon': Icons.lightbulb_outline,
-        'title': 'Skill Development',
-        'description': 'Enhance critical thinking',
-        'route': '/ocr',
-        'color': Colors.orange,
-      },
-      {
-        'icon': Icons.bug_report,
-        'title': 'Problem Solving',
-        'description': 'Practice algorithms',
-        'route': '/tags',
-        'color': Colors.pink,
-      },
-      {
-        'icon': Icons.data_object,
-        'title': 'Data Structures',
-        'description': 'Master core concepts',
-        'route': '/data-structures',
-        'color': Colors.purple,
-      },
-      {
-        'icon': Icons.security,
-        'title': 'Cyber Security',
-        'description': 'Learn protection techniques',
-        'route': '/security',
-        'color': Colors.blue,
-      },
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const BouncingScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.9,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return _buildCard(
-          icon: item['icon'] as IconData,
-          title: item['title'] as String,
-          description: item['description'] as String,
-          color: item['color'] as Color,
-          onTap: () => Navigator.pushNamed(context, item['route'] as String),
-          delay: 100 * (index + 1),
-        );
-      },
-    );
+    ).then((_) => setState(() {}));
   }
 
   Widget _buildCard({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String description,
@@ -166,17 +232,18 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
     required int delay,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      shadowColor: color.withOpacity(0.2),
+      color: isDark ? theme.colorScheme.surface : theme.colorScheme.surface,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
-        splashColor: color.withOpacity(0.1),
-        highlightColor: color.withOpacity(0.05),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
@@ -184,44 +251,58 @@ class _HomeScreenState extends State<HomeScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                color.withOpacity(0.05),
-                color.withOpacity(0.15),
+                color.withOpacity(isDark ? 0.15 : 0.1),
+                color.withOpacity(isDark ? 0.25 : 0.2),
               ],
             ),
           ),
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(12),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withOpacity(isDark ? 0.3 : 0.2),
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(isDark ? 0.2 : 0.1),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
-                child: Icon(icon, size: 28, color: color),
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: isDark ? color.withOpacity(0.9) : color,
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 16,
+                style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: color,
+                  color: isDark ? theme.colorScheme.onSurface : color,
                 ),
                 textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[700],
-                  height: 1.4,
-                ),
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                maxLines: 2,
+              ),
+              const SizedBox(height: 4),
+              Flexible(
+                child: Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.2,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                ),
               ),
             ],
           ),
@@ -229,7 +310,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     )
         .animate()
-        .fadeIn(duration: 400.ms, delay: delay.ms)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, delay: delay.ms);
+        .fadeIn(duration: 600.ms, delay: delay.ms)
+        .slideY(begin: 0.2, end: 0, duration: 600.ms, delay: delay.ms)
+        .scaleXY(begin: 0.8, end: 1, duration: 600.ms, delay: delay.ms);
   }
 }

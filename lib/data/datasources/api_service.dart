@@ -7,7 +7,7 @@ import '../models/problem_model.dart';
 import '../models/tag.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://elearn-backend-soe2.onrender.com/api';
+  static const String baseUrl = 'http://82.29.197.177:8000/api';
 
   // تسجيل حساب جديد
   static Future<Map<String, dynamic>> register({

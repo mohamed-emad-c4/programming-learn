@@ -2,19 +2,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/auth/auth_cubit.dart';
+import 'package:learn_programming/presentation/cubit/theme/theme_cubit.dart';
 
 class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final authCubit = BlocProvider.of<AuthCubit>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('الإعدادات'),
+        title: const Text('Settings'),
       ),
       body: ListView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         children: [
+          const _ThemeSettings(),
+          const Divider(),
           _buildSettingsSection(
             title: 'عام',
             children: [
@@ -36,7 +41,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 16.0),
+          const SizedBox(height: 16.0),
           _buildSettingsSection(
             title: 'الحساب',
             children: [
@@ -58,7 +63,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 16.0),
+          const SizedBox(height: 16.0),
           _buildSettingsSection(
             title: 'أخرى',
             children: [
@@ -105,7 +110,7 @@ class SettingsScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18.0,
               fontWeight: FontWeight.bold,
               color: Colors.blue,
@@ -132,8 +137,62 @@ class SettingsScreen extends StatelessWidget {
       leading: Icon(icon, color: Colors.blue),
       title: Text(title),
       subtitle: Text(subtitle),
-      trailing: Icon(Icons.arrow_forward_ios, size: 16.0),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16.0),
       onTap: onTap,
+    );
+  }
+}
+
+class _ThemeSettings extends StatelessWidget {
+  const _ThemeSettings();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Appearance',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            RadioListTile<ThemeState>(
+              title: const Text('Light'),
+              value: ThemeState.light,
+              groupValue: state,
+              onChanged: (ThemeState? value) {
+                if (value != null) {
+                  context.read<ThemeCubit>().setTheme(value);
+                }
+              },
+            ),
+            RadioListTile<ThemeState>(
+              title: const Text('Dark'),
+              value: ThemeState.dark,
+              groupValue: state,
+              onChanged: (ThemeState? value) {
+                if (value != null) {
+                  context.read<ThemeCubit>().setTheme(value);
+                }
+              },
+            ),
+            RadioListTile<ThemeState>(
+              title: const Text('System'),
+              value: ThemeState.system,
+              groupValue: state,
+              onChanged: (ThemeState? value) {
+                if (value != null) {
+                  context.read<ThemeCubit>().setTheme(value);
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
