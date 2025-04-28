@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../cubit/course/course_cubit.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class ChapterScreen extends StatelessWidget {
   final int courseId;
@@ -13,126 +14,110 @@ class ChapterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Define consistent theme colors (can be moved to a theme file later)
-    final Color primaryColor = Colors.blue.shade800;
-    final Color accentColor = Colors.deepPurpleAccent;
-    final Color cardBackgroundColor = Colors.blueGrey[50]!;
-    final Color cardTextColor = Colors.blueGrey[800]!;
-    final Color completedColor = Colors.green.shade600;
-    final Color pendingColor = Colors.blueGrey;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return BlocProvider(
       create: (context) => CourseCubit()..fetchCourseById(courseId),
       child: Scaffold(
-        // Use Scaffold background color for consistency
-        backgroundColor: Colors.grey[100],
+        backgroundColor: theme.colorScheme.surface,
         body: BlocBuilder<CourseCubit, CourseState>(
           builder: (context, state) {
             if (state is CourseLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(
+                child: CircularProgressIndicator(
+                  color: theme.colorScheme.primary,
+                ),
+              );
             } else if (state is CourseError) {
-              return _buildErrorState(context, state.message, primaryColor);
+              return _buildErrorState(context, state.message);
             } else if (state is SpecificCourseLoaded) {
               final course = state.course;
               final chapters = state.chapters;
-              // Calculate completion state here to pass to the persistent footer button
               final bool allCompleted = chapters.isNotEmpty &&
                   chapters.every((c) => c['completed'] ?? true);
 
               return Scaffold(
-                // Nested Scaffold to easily use persistentFooterButtons with CustomScrollView
-                // Make the inner Scaffold transparent so the outer one's background shows
                 backgroundColor: Colors.transparent,
                 body: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
                   slivers: [
-                    _buildSliverAppBar(context, course, primaryColor),
-                    SliverList(
-                      delegate: SliverChildListDelegate(
-                        [
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildDescription(context, course),
-                                const SizedBox(height: 20),
-                                Divider(color: Colors.grey[300]),
-                                const SizedBox(height: 10),
-                                _buildChapterList(
-                                  context,
-                                  chapters,
-                                  accentColor,
-                                  cardBackgroundColor,
-                                  cardTextColor,
-                                  completedColor,
-                                  pendingColor,
-                                ),
-                                // Space at the bottom to ensure content doesn't hide behind the button initially
-                                const SizedBox(height: 80),
-                              ],
-                            ),
-                          ),
-                        ],
+                    _buildSliverAppBar(context, course),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildDescription(context, course),
+                            const SizedBox(height: 24),
+                            _buildStats(context, chapters),
+                            const SizedBox(height: 24),
+                            Divider(color: theme.dividerColor.withOpacity(0.1)),
+                            const SizedBox(height: 24),
+                            _buildChapterList(context, chapters),
+                            const SizedBox(height: 80),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-                // --- Persistent Footer Button ---
-                // This button stays fixed at the bottom, regardless of scrolling
                 persistentFooterButtons: [
-                  _buildFinalExamButton(
-                      context, courseId, allCompleted, completedColor)
+                  _buildFinalExamButton(context, courseId, allCompleted)
                 ],
-                // Center the button if needed, or adjust padding within _buildFinalExamButton
                 persistentFooterAlignment: AlignmentDirectional.center,
               );
             }
-            // Fallback for unhandled states or initial state
             return Center(
-                child: Text(
-              'Loading course details...',
-              style: GoogleFonts.poppins(color: Colors.grey),
-            ));
+              child: Text(
+                'Loading course details...',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+            );
           },
         ),
       ),
     );
   }
 
-  // ✅ Enhanced Sliver App Bar
-  Widget _buildSliverAppBar(
-      BuildContext context, Map<String, dynamic> course, Color primaryColor) {
-    return SliverAppBar(
+  Widget _buildSliverAppBar(BuildContext context, Map<String, dynamic> course) {
+    final theme = Theme.of(context);
+
+    return SliverAppBar.large(
       expandedHeight: 250.0,
       pinned: true,
-      stretch: true, // Allows stretching on overscroll
+      stretch: true,
       flexibleSpace: FlexibleSpaceBar(
         title: Text(
-          course['title'] ?? 'Course Details', // Use course title if available
-          style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
-          overflow: TextOverflow.ellipsis,
+          course['title'] ?? 'Course Details',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        titlePadding: const EdgeInsetsDirectional.only(
-            start: 72, bottom: 16), // Adjust padding
         background: Stack(
           fit: StackFit.expand,
           children: [
             Hero(
               tag: 'courseImage-${course['id']}',
-              child: FadeInImage.assetNetwork(
-                placeholder:
-                    'assets/images/fallback.jpg', // Ensure this asset exists
-                image: course['image_url'] ?? '',
+              child: Image.network(
+                course['image_url'] ?? '',
                 fit: BoxFit.cover,
-                imageErrorBuilder: (context, error, stackTrace) {
-                  // Fallback in case the network image fails
-                  return Image.asset('assets/images/fallback.jpg',
-                      fit: BoxFit.cover);
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: theme.colorScheme.primaryContainer,
+                    child: Icon(
+                      Icons.school_outlined,
+                      size: 64,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  );
                 },
               ),
             ),
-            // Add a gradient overlay for better text visibility
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -140,53 +125,128 @@ class ChapterScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity(0.2),
-                    Colors.black.withOpacity(0.7),
+                    theme.colorScheme.primary.withOpacity(0.3),
+                    theme.colorScheme.primary.withOpacity(0.8),
                   ],
-                  stops: const [0.0, 0.5, 1.0],
+                  stops: const [0.3, 0.6, 1.0],
                 ),
               ),
             ),
           ],
         ),
       ),
-      backgroundColor: primaryColor, // Use primary theme color
-      iconTheme: const IconThemeData(
-          color: Colors.white), // Ensure back button is visible
     );
   }
 
-  // ✅ Enhanced Course Description
   Widget _buildDescription(BuildContext context, Map<String, dynamic> course) {
+    final theme = Theme.of(context);
+
     return Text(
       course['description'] ?? 'No description available for this course.',
-      style: GoogleFonts.roboto(
-        // Or Poppins for consistency
-        fontSize: 16,
-        color: Colors.black87, // Good contrast
-        height: 1.5, // Improved line spacing
+      style: theme.textTheme.bodyLarge?.copyWith(
+        color: theme.colorScheme.onSurface.withOpacity(0.8),
+        height: 1.6,
       ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 600.ms)
+        .moveX(begin: -30, end: 0, duration: 600.ms);
   }
 
-  // ✅ Enhanced Chapter List UI
-  Widget _buildChapterList(
-      BuildContext context,
-      List<Map<String, dynamic>> chapters,
-      Color accentColor,
-      Color cardBackgroundColor,
-      Color cardTextColor,
-      Color completedColor,
-      Color pendingColor) {
-    if (chapters.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20.0),
-        child: Center(
-          child: Text(
-            'No chapters found for this course yet.',
-            style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[600]),
-            textAlign: TextAlign.center,
+  Widget _buildStats(
+      BuildContext context, List<Map<String, dynamic>> chapters) {
+    final theme = Theme.of(context);
+    final completedCount =
+        chapters.where((c) => c['completed'] ?? false).length;
+    final totalChapters = chapters.length;
+    final progress = totalChapters > 0 ? completedCount / totalChapters : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Your Progress',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '${(progress * 100).toInt()}%',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+              valueColor:
+                  AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+              minHeight: 8,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$completedCount of $totalChapters chapters completed',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+              Icon(
+                Icons.auto_stories,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.2, end: 0);
+  }
+
+  Widget _buildChapterList(
+      BuildContext context, List<Map<String, dynamic>> chapters) {
+    final theme = Theme.of(context);
+
+    if (chapters.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.menu_book_outlined,
+              size: 64,
+              color: theme.colorScheme.onSurface.withOpacity(0.2),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No chapters available yet',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -194,105 +254,121 @@ class ChapterScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '📚 Chapters',
-          style: GoogleFonts.poppins(
-            // Consistent font
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: accentColor, // Use accent theme color
-          ),
+        Row(
+          children: [
+            Icon(
+              Icons.library_books_outlined,
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Course Content',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
         ListView.builder(
-          shrinkWrap: true, // Important inside Column/SliverList
-          physics:
-              const NeverScrollableScrollPhysics(), // Scrolling handled by CustomScrollView
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: chapters.length,
           itemBuilder: (context, index) {
-            return _buildChapterCard(
-              context,
-              chapters[index],
-              index + 1, // Pass chapter number for display
-              cardBackgroundColor,
-              cardTextColor,
-              completedColor,
-              pendingColor,
-            );
+            return _buildChapterCard(context, chapters[index], index + 1)
+                .animate(delay: Duration(milliseconds: 100 * index))
+                .fadeIn(duration: 600.ms)
+                .moveX(begin: 30, end: 0, duration: 600.ms);
           },
         ),
       ],
     );
   }
 
-  // ✅ Enhanced Chapter Card UI
   Widget _buildChapterCard(
-      BuildContext context,
-      Map<String, dynamic> chapter,
-      int chapterNumber,
-      Color cardBackgroundColor,
-      Color cardTextColor,
-      Color completedColor,
-      Color pendingColor) {
-    final bool isCompleted =
-        chapter['completed'] ?? true; // Default to true if not specified
+      BuildContext context, Map<String, dynamic> chapter, int chapterNumber) {
+    final theme = Theme.of(context);
+    final bool isCompleted = chapter['completed'] ?? false;
 
     return Card(
-      // Using Card for elevation and shape
-      margin:
-          const EdgeInsets.symmetric(vertical: 6.0), // Reduced vertical margin
-      elevation: 2.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      color: cardBackgroundColor, // Use defined card color
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withOpacity(0.1),
+        ),
+      ),
       child: InkWell(
-        // InkWell provides ripple effect on tap
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
-          log('Chapter ID: ${chapter['id']}'); // Log chapter ID
-          Navigator.pushNamed(context, '/lessons', arguments: {
-            'languageId': courseId, // Ensure courseId is accessible here
-            'chapterNumber': chapter['id'], // Use chapter ID from data
-          });
+          log('Chapter ID: ${chapter['id']}');
+          Navigator.pushNamed(
+            context,
+            '/lessons',
+            arguments: {
+              'languageId': courseId,
+              'chapterNumber': chapter['id'],
+            },
+          );
         },
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Chapter Number Circle
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: isCompleted
-                    ? completedColor
-                    : pendingColor.withOpacity(0.7),
-                child: Text(
-                  '$chapterNumber',
-                  style: GoogleFonts.poppins(
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isCompleted
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.surfaceContainerHighest,
+                ),
+                child: Center(
+                  child: Text(
+                    '$chapterNumber',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: isCompleted
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 14),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
-              // Chapter Title and Status Icon
               Expanded(
-                child: Text(
-                  chapter['title'] ?? 'Unnamed Chapter',
-                  style: GoogleFonts.poppins(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600, // Semi-bold
-                    color: cardTextColor, // Use defined text color
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      chapter['title'] ?? 'Unnamed Chapter',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (chapter['duration'] != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '${chapter['duration']} min',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               const SizedBox(width: 12),
-              // Completion Status Icon
               Icon(
-                isCompleted
-                    ? Icons.check_circle
-                    : Icons.radio_button_unchecked, // More distinct icons
-                color: isCompleted ? completedColor : pendingColor,
+                isCompleted ? Icons.check_circle : Icons.play_circle_outline,
+                color: isCompleted
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.primary.withOpacity(0.4),
                 size: 24,
               ),
             ],
@@ -302,85 +378,88 @@ class ChapterScreen extends StatelessWidget {
     );
   }
 
-  // ✅ Always Visible Final Exam Button (Conditionally Enabled)
-  Widget _buildFinalExamButton(BuildContext context, int courseId,
-      bool allCompleted, Color completedColor) {
+  Widget _buildFinalExamButton(
+      BuildContext context, int courseId, bool allCompleted) {
+    final theme = Theme.of(context);
+
     return Padding(
-      // Padding ensures it doesn't touch screen edges
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: SizedBox(
-        width: double.infinity, // Make button take full width
-        child: ElevatedButton.icon(
-          icon: Icon(allCompleted ? Icons.quiz : Icons.lock_outline,
-              size: 20), // Change icon based on state
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            backgroundColor: allCompleted
-                ? completedColor
-                : Colors.grey.shade400, // Change color based on state
-            foregroundColor: Colors.white, // Text/icon color
-            textStyle:
-                GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)), // Match card shape
-            elevation: 3, // Add slight elevation
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: FilledButton.icon(
+        onPressed: allCompleted
+            ? () {
+                Navigator.pushNamed(context, '/exam', arguments: courseId);
+              }
+            : null,
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          backgroundColor: theme.colorScheme.primary,
+          disabledBackgroundColor: theme.colorScheme.surfaceContainerHighest,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          // Disable button by setting onPressed to null if not all completed
-          onPressed: allCompleted
-              ? () {
-                  Navigator.pushNamed(context, '/exam', arguments: courseId);
-                }
-              : null, // THIS DISABLES THE BUTTON
-          label: Text(allCompleted
-              ? 'Start Final Exam'
-              : 'Complete Chapters to Unlock'), // Change text based on state
+        ),
+        icon: Icon(
+          allCompleted ? Icons.quiz : Icons.lock_outline,
+          size: 20,
+        ),
+        label: Text(
+          allCompleted ? 'Start Final Exam' : 'Complete All Chapters to Unlock',
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: allCompleted
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
   }
 
-  // ✅ Enhanced Error State UI
-  Widget _buildErrorState(
-      BuildContext context, String message, Color primaryColor) {
+  Widget _buildErrorState(BuildContext context, String message) {
+    final theme = Theme.of(context);
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, color: Colors.red.shade400, size: 60),
-            const SizedBox(height: 20),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: theme.colorScheme.error,
+            ),
+            const SizedBox(height: 16),
             Text(
-              'Oops! Something went wrong.',
-              style: GoogleFonts.poppins(
-                  fontSize: 18, fontWeight: FontWeight.bold),
+              'Oops! Something went wrong',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               message,
-              style: GoogleFonts.roboto(fontSize: 15, color: Colors.grey[700]),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 25),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.refresh),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor, // Use primary color
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
               onPressed: () =>
                   context.read<CourseCubit>().fetchCourseById(courseId),
-              label: const Text('Retry'),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
             ),
           ],
         ),
       ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 600.ms)
+        .scaleXY(begin: 0.8, end: 1.0, duration: 600.ms);
   }
 }
 /* --- End lib\presentation\screens\course\chapter_screen.dart --- */
