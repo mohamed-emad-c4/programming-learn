@@ -132,10 +132,12 @@ class _LessonScreenState extends State<LessonScreen>
                 ),
                 child: TabBar(
                   controller: _tabController,
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.center,
                   tabs: const [
                     Tab(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.list_alt_rounded),
                           SizedBox(width: 8),
@@ -145,7 +147,7 @@ class _LessonScreenState extends State<LessonScreen>
                     ),
                     Tab(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.check_circle_outline),
                           SizedBox(width: 8),
@@ -155,7 +157,7 @@ class _LessonScreenState extends State<LessonScreen>
                     ),
                     Tab(
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.bookmark_border_rounded),
                           SizedBox(width: 8),
@@ -166,6 +168,11 @@ class _LessonScreenState extends State<LessonScreen>
                   ],
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
+                  labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  unselectedLabelStyle: theme.textTheme.bodyMedium,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
               ),
             ),
@@ -303,38 +310,45 @@ class _LessonScreenState extends State<LessonScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.menu_book_outlined,
-                color: theme.colorScheme.primary,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Course Content',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '$lessonCount Lessons',
-                  style: theme.textTheme.labelMedium?.copyWith(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return Row(
+                children: [
+                  Icon(
+                    Icons.menu_book_outlined,
                     color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w500,
+                    size: 24,
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Course Content',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$lessonCount Lessons',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           ClipRRect(
@@ -501,7 +515,7 @@ class _LessonScreenState extends State<LessonScreen>
     final theme = Theme.of(context);
     final lessonId = lesson['lesson_id'];
     final title = lesson['title']?.toString() ?? 'Unnamed Lesson';
-    final isCompleted = lesson['completed'] ?? false; // Add completion status
+    final isCompleted = lesson['completed'] ?? false;
 
     String contentPreview = 'View lesson details';
     dynamic contentData = lesson['content'];
@@ -575,65 +589,70 @@ class _LessonScreenState extends State<LessonScreen>
               ),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isCompleted
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.primaryContainer,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: theme.textTheme.titleMedium?.copyWith(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
                           color: isCompleted
-                              ? theme.colorScheme.onPrimary
-                              : theme.colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.primaryContainer,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: isCompleted
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (contentPreview != 'View lesson details') ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            contentPreview,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color:
-                                  theme.colorScheme.onSurface.withOpacity(0.6),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  ),
-                ],
+                            if (contentPreview != 'View lesson details') ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                contentPreview,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.6),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
