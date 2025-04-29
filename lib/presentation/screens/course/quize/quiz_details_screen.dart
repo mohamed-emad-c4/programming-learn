@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../data/datasources/api_service.dart';
 import '../../../cubit/quiz/quiz_details_cubit.dart';
+import 'widgets/quiz_card.dart';
+import 'widgets/quiz_stats_card.dart';
+import 'widgets/pattern_painter.dart';
 
 class QuizDetailsScreen extends StatefulWidget {
   final int lessonId;
@@ -17,6 +19,7 @@ class QuizDetailsScreen extends StatefulWidget {
 class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
   late ScrollController _scrollController;
   bool _showFloatingButton = false;
+  int _selectedTabIndex = 0;
 
   @override
   void initState() {
@@ -41,8 +44,6 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocProvider(
       create: (context) =>
           QuizDetailsCubit(ApiService())..fetchQuizzes(widget.lessonId),
@@ -50,96 +51,90 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
         body: NestedScrollView(
           controller: _scrollController,
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            SliverAppBar.large(
-              expandedHeight: 200,
-              pinned: true,
-              title: Text(
-                'Quiz Details',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary,
-                            theme.colorScheme.primaryContainer,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: Opacity(
-                        opacity: 0.1,
-                        child: CustomPaint(
-                          painter: PatternPainter(),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: -50,
-                      bottom: -20,
-                      child: Icon(
-                        Icons.quiz_rounded,
-                        size: 180,
-                        color: theme.colorScheme.onPrimary.withOpacity(0.1),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _buildAppBar(context),
           ],
           body: BlocBuilder<QuizDetailsCubit, QuizDetailsState>(
             builder: (context, state) {
               if (state is QuizDetailsLoading) {
-                return _buildLoadingState(context);
+                return _buildLoadingState();
               } else if (state is QuizDetailsError) {
-                return _buildErrorState(context, state.message);
+                return _buildErrorState(state.message);
               } else if (state is QuizDetailsLoaded) {
-                final quizzes = state.quizzes;
-                if (quizzes.isEmpty) {
-                  return _buildEmptyState(context);
-                }
-                return _buildQuizList(context, quizzes);
-              } else {
-                return _buildEmptyState(context);
+                return _buildContent(state.quizzes);
               }
+              return _buildEmptyState();
             },
           ),
         ),
-        floatingActionButton: _showFloatingButton
-            ? FloatingActionButton(
-                onPressed: () {
-                  _scrollController.animateTo(
-                    0,
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                child: const Icon(Icons.keyboard_arrow_up),
-              ).animate().scale()
-            : null,
+        floatingActionButton:
+            _showFloatingButton ? _buildFloatingActionButton() : null,
       ),
     );
   }
 
-  Widget _buildQuizList(
-      BuildContext context, List<Map<String, dynamic>> quizzes) {
+  Widget _buildAppBar(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SliverAppBar.large(
+      expandedHeight: 200,
+      pinned: true,
+      title: Text(
+        'Quiz Details',
+        style: theme.textTheme.titleLarge?.copyWith(
+          color: theme.colorScheme.onPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primaryContainer,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.1,
+                child: CustomPaint(
+                  painter: PatternPainter(),
+                ),
+              ),
+            ),
+            Positioned(
+              right: -50,
+              bottom: -20,
+              child: Icon(
+                Icons.quiz_rounded,
+                size: 180,
+                color: theme.colorScheme.onPrimary.withOpacity(0.1),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(List<Map<String, dynamic>> quizzes) {
+    if (quizzes.isEmpty) {
+      return _buildEmptyState();
+    }
+
     return CustomScrollView(
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              _buildQuizStats(context, quizzes),
+              QuizStatsCard(quizzes: quizzes),
               const SizedBox(height: 24),
               ...List.generate(
                 quizzes.length,
@@ -148,7 +143,7 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
                   child: QuizCard(quiz: quizzes[index], index: index),
                 ),
               ),
-              const SizedBox(height: 80), // Bottom padding
+              const SizedBox(height: 80),
             ]),
           ),
         ),
@@ -156,134 +151,7 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
     );
   }
 
-  Widget _buildQuizStats(
-      BuildContext context, List<Map<String, dynamic>> quizzes) {
-    final theme = Theme.of(context);
-    final totalQuizzes = quizzes.length;
-    final completedQuizzes =
-        quizzes.where((q) => q['completed'] == true).length;
-
-    // Calculate average score properly
-    final scores = quizzes
-        .where((q) => q['score'] != null)
-        .map((q) => q['score'] as num)
-        .toList();
-    final averageScore = scores.isNotEmpty
-        ? scores.reduce((a, b) => a + b) / scores.length
-        : null;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.secondary.withOpacity(0.1),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.analytics_rounded,
-                color: theme.colorScheme.secondary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Your Progress',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSecondaryContainer,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem(
-                context,
-                Icons.assignment_turned_in_rounded,
-                '$completedQuizzes/$totalQuizzes',
-                'Completed',
-              ),
-              _buildStatItem(
-                context,
-                Icons.stars_rounded,
-                averageScore?.toStringAsFixed(1) ?? '-',
-                'Avg. Score',
-              ),
-              _buildStatItem(
-                context,
-                Icons.timeline_rounded,
-                '${((completedQuizzes / totalQuizzes) * 100).toStringAsFixed(0)}%',
-                'Progress',
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: completedQuizzes / totalQuizzes,
-              backgroundColor: theme.colorScheme.secondary.withOpacity(0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                theme.colorScheme.secondary,
-              ),
-              minHeight: 8,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 600.ms).scale(
-          begin: const Offset(0.95, 0.95),
-          end: const Offset(1, 1),
-        );
-  }
-
-  Widget _buildStatItem(
-    BuildContext context,
-    IconData icon,
-    String value,
-    String label,
-  ) {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: theme.colorScheme.secondary,
-            size: 24,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSecondaryContainer,
-          ),
-        ),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSecondaryContainer.withOpacity(0.7),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoadingState(BuildContext context) {
+  Widget _buildLoadingState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -299,7 +167,7 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String message) {
+  Widget _buildErrorState(String message) {
     final theme = Theme.of(context);
 
     return Center(
@@ -355,7 +223,7 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState() {
     final theme = Theme.of(context);
 
     return Center(
@@ -391,276 +259,74 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
       ).animate().fadeIn(duration: 600.ms).moveY(begin: 30, end: 0),
     );
   }
-}
 
-class QuizCard extends StatelessWidget {
-  final Map<String, dynamic> quiz;
-  final int index;
-
-  const QuizCard({super.key, required this.quiz, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final hasDescription = quiz['description'] != null &&
-        quiz['description'].toString().isNotEmpty;
-    final isCompleted = quiz['completed'] ?? false;
-    final score = quiz['score'];
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isCompleted
-              ? theme.colorScheme.primary.withOpacity(0.3)
-              : theme.colorScheme.outline.withOpacity(0.1),
-        ),
-      ),
-      child: InkWell(
-        onTap: () => navigateToQuiz(context, quiz),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isCompleted
-                          ? theme.colorScheme.primary.withOpacity(0.1)
-                          : theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      isCompleted
-                          ? Icons.check_circle_rounded
-                          : Icons.quiz_rounded,
-                      color: theme.colorScheme.primary,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          quiz['title'],
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (score != null) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.stars_rounded,
-                                size: 16,
-                                color: theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Score: ${score.toStringAsFixed(1)}',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  if (isCompleted)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.check_rounded,
-                            size: 16,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Completed',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-              if (hasDescription) ...[
-                const SizedBox(height: 16),
-                Text(
-                  quiz['description'],
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildInfoChip(
-                      context,
-                      Icons.stars_rounded,
-                      'Total Marks',
-                      quiz['total_marks'].toString(),
-                      theme.colorScheme.tertiary,
-                    ),
-                    const SizedBox(width: 12),
-                    _buildInfoChip(
-                      context,
-                      Icons.timer_outlined,
-                      'Time Limit',
-                      '${quiz['time_limit']} mins',
-                      theme.colorScheme.secondary,
-                    ),
-                    const SizedBox(width: 12),
-                    _buildInfoChip(
-                      context,
-                      Icons.question_answer_outlined,
-                      'Questions',
-                      quiz['questions'].length.toString(),
-                      theme.colorScheme.primary,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => navigateToQuiz(context, quiz),
-                  icon: Icon(
-                    isCompleted
-                        ? Icons.refresh_rounded
-                        : Icons.play_arrow_rounded,
-                  ),
-                  label: Text(isCompleted ? 'Retake Quiz' : 'Start Quiz'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: isCompleted
-                        ? theme.colorScheme.secondaryContainer
-                        : null,
-                    foregroundColor: isCompleted
-                        ? theme.colorScheme.onSecondaryContainer
-                        : null,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    )
-        .animate(delay: Duration(milliseconds: 100 * index))
-        .fadeIn(duration: 600.ms)
-        .slideX(begin: 0.2, end: 0);
-  }
-
-  Widget _buildInfoChip(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value,
-    Color accentColor,
-  ) {
+  Widget _buildFloatingActionButton() {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: accentColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: accentColor.withOpacity(0.2),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Stack(
+        alignment: Alignment.bottomRight,
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: accentColor,
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+          if (_selectedTabIndex < 3)
+            Positioned(
+              bottom: 56,
+              right: 0,
+              child: FloatingActionButton.small(
+                heroTag: 'bookmark_fab_quiz_details',
+                onPressed: () {
+                  setState(() {
+                    _selectedTabIndex = (_selectedTabIndex + 1) % 3;
+                  });
+                },
+                child: Icon(
+                  _selectedTabIndex == 0
+                      ? Icons.bookmark
+                      : Icons.bookmark_border,
                 ),
-              ),
-              Text(
-                value,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: accentColor,
-                ),
-              ),
-            ],
-          ),
+              ).animate().scale(delay: 200.ms),
+            ),
+          FloatingActionButton.extended(
+            heroTag: 'main_fab_quiz_details',
+            onPressed: () {
+              // TODO: Implement quick navigation or lesson filtering
+            },
+            icon: Icon(_getFloatingActionButtonIcon()),
+            label: Text(_getFloatingActionButtonLabel()),
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+          )
+              .animate()
+              .fadeIn(duration: 300.ms, delay: 500.ms)
+              .moveY(begin: 50, end: 0, duration: 300.ms, delay: 500.ms),
         ],
       ),
     );
   }
 
-  void navigateToQuiz(BuildContext context, Map<String, dynamic> quiz) {
-    Navigator.pushNamed(
-      context,
-      '/quiz-submission',
-      arguments: {
-        'quizId': quiz['id'],
-        'questions': List<Map<String, dynamic>>.from(quiz['questions']),
-      },
-    );
-  }
-}
-
-class PatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
-
-    const spacing = 20.0;
-    for (double i = 0; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(0, i),
-        Offset(i, 0),
-        paint,
-      );
+  IconData _getFloatingActionButtonIcon() {
+    switch (_selectedTabIndex) {
+      case 0:
+        return Icons.play_arrow_rounded;
+      case 1:
+        return Icons.refresh_rounded;
+      case 2:
+        return Icons.bookmark_add_rounded;
+      default:
+        return Icons.play_arrow_rounded;
     }
   }
 
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  String _getFloatingActionButtonLabel() {
+    switch (_selectedTabIndex) {
+      case 0:
+        return 'Start Quiz';
+      case 1:
+        return 'Retry Quiz';
+      case 2:
+        return 'Bookmark Quiz';
+      default:
+        return 'Start Quiz';
+    }
+  }
 }
