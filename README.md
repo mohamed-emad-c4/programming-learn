@@ -60,9 +60,9 @@ Each chapter contains:
   
 | Login Screen | Home Dashboard | Problem Solving |
 |:---:|:---:|:---:|
-| <img src="screenshots/login.png" width="200"> | <img src="screenshots/dashboard.png" width="200"> | <img src="screenshots/problem_solving.png" width="200"> |
+| <img src="https://github.com/user-attachments/assets/2ac9e732-0c90-4a34-9687-ce93af88292b" width="200"> | <img src="https://github.com/user-attachments/assets/95da86c8-a08f-4a1d-ba58-8f38fcc409c8" width="200"> | <img src="https://github.com/user-attachments/assets/deb519d7-8374-423b-9c81-2f7174166e6f" width="200"> |
 | Course Detail | Video Lesson | Quiz Interface |
-| <img src="screenshots/course_detail.png" width="200"> | <img src="screenshots/video_lesson.png" width="200"> | <img src="screenshots/quiz.png" width="200"> |
+| <img src="https://github.com/user-attachments/assets/82036100-6492-4510-8ab0-891396547284" width="200"> | <img src="https://github.com/user-attachments/assets/fb91ea4e-1ea7-412f-bd63-e98874dff9d9" width="200"> | <img src="https://github.com/user-attachments/assets/cc25b7be-dcf2-4094-8103-0c1f28a03618" width="200"> |
 
 </div>
 
