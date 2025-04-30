@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +9,9 @@ import 'package:learn_programming/presentation/cubit/problem/problem/problem_cub
 import 'package:learn_programming/presentation/theme/app_theme.dart';
 import 'package:learn_programming/presentation/cubit/theme/theme_cubit.dart';
 import 'package:learn_programming/test.dart';
+// Remove the imports causing issues
+// import 'package:flutter_localizations/flutter_localizations.dart';
+// import 'package:device_preview/device_preview.dart';
 // Domain
 import 'data/datasources/api_service.dart';
 import 'domain/repositories/auth_repository.dart';
@@ -35,21 +39,63 @@ import 'presentation/screens/course/lesson/lesson_screen.dart';
 import 'presentation/screens/course/lesson/view_lesson_screen.dart';
 import 'presentation/screens/course/quize/quiz_details_screen.dart';
 import 'presentation/screens/course/quize/quiz_result_screen.dart';
+import 'presentation/screens/error_screen.dart';
+
+// Custom BLoC observer for better debugging
+class AppBlocObserver extends BlocObserver {
+  @override
+  void onEvent(Bloc bloc, Object? event) {
+    super.onEvent(bloc, event);
+    debugPrint('${bloc.runtimeType} $event');
+  }
+
+  @override
+  void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
+    debugPrint('${bloc.runtimeType} $error $stackTrace');
+    super.onError(bloc, error, stackTrace);
+  }
+
+  @override
+  void onChange(BlocBase bloc, Change change) {
+    super.onChange(bloc, change);
+    debugPrint('${bloc.runtimeType}: $change');
+  }
+}
 
 void main() async {
+  // Catch Flutter framework errors
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint('Flutter error: ${details.exception} ${details.stack}');
+  };
+
+  // Catch async errors
   WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  // Set BLoC observer
+  Bloc.observer = AppBlocObserver();
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
 
   await _setupDependencies(prefs);
 
+  // Run the app without DevicePreview which was causing issues
   runApp(const MyApp());
 }
 
 Future<void> _setupDependencies(SharedPreferences prefs) async {
   // Register SharedPreferences
   GetIt.I.registerSingleton<SharedPreferences>(prefs);
+
+  // Register API Service
+  final apiService = ApiService();
+  GetIt.I.registerSingleton<ApiService>(apiService);
 
   // Register Repositories
   final authRepository = AuthRepositoryImpl();
@@ -58,6 +104,12 @@ Future<void> _setupDependencies(SharedPreferences prefs) async {
   // Register Cubits
   GetIt.I.registerFactory(() => AuthCubit(GetIt.I<AuthRepository>()));
   GetIt.I.registerFactory(() => ThemeCubit(GetIt.I<SharedPreferences>()));
+  GetIt.I.registerFactory(() => LessonCubit(GetIt.I<ApiService>()));
+  GetIt.I.registerFactory(() => QuizSubmissionCubit());
+  GetIt.I.registerFactory(() => QuizResultCubit(GetIt.I<ApiService>()));
+  GetIt.I.registerFactory(() => TagsCubit(GetIt.I<ApiService>()));
+  GetIt.I.registerFactory(() => ProblemCubit(GetIt.I<ApiService>()));
+  GetIt.I.registerFactory(() => ImageCubit());
 
   // Check Token
   final token = await authRepository.getToken();
@@ -80,18 +132,14 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthCubit>(create: (_) => GetIt.I<AuthCubit>()),
         BlocProvider<ThemeCubit>(create: (_) => GetIt.I<ThemeCubit>()),
-        BlocProvider<LessonCubit>(
-          create: (context) => LessonCubit(ApiService()),
-        ),
+        BlocProvider<LessonCubit>(create: (_) => GetIt.I<LessonCubit>()),
         BlocProvider<QuizSubmissionCubit>(
-          create: (context) => QuizSubmissionCubit(),
-        ),
+            create: (_) => GetIt.I<QuizSubmissionCubit>()),
         BlocProvider<QuizResultCubit>(
-            create: (context) => QuizResultCubit(ApiService())),
-        BlocProvider<TagsCubit>(create: (context) => TagsCubit(ApiService())),
-        BlocProvider<ProblemCubit>(
-            create: (context) => ProblemCubit(ApiService())),
-        BlocProvider<ImageCubit>(create: (context) => ImageCubit()),
+            create: (_) => GetIt.I<QuizResultCubit>()),
+        BlocProvider<TagsCubit>(create: (_) => GetIt.I<TagsCubit>()),
+        BlocProvider<ProblemCubit>(create: (_) => GetIt.I<ProblemCubit>()),
+        BlocProvider<ImageCubit>(create: (_) => GetIt.I<ImageCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {
@@ -104,7 +152,13 @@ class MyApp extends StatelessWidget {
             initialRoute: GetIt.I.isRegistered<String>(instanceName: 'token')
                 ? '/home'
                 : '/login',
-            routes: _buildRoutes(),
+            onGenerateRoute: _generateRoute,
+            onUnknownRoute: (settings) => MaterialPageRoute(
+              builder: (context) => ErrorScreen(
+                errorMessage: 'Page not found: ${settings.name}',
+              ),
+            ),
+            // Remove localization and device preview
           );
         },
       ),
@@ -122,59 +176,130 @@ class MyApp extends StatelessWidget {
     }
   }
 
-  Map<String, WidgetBuilder> _buildRoutes() {
-    return {
-      '/login': (context) => const LoginScreen(),
-      '/sign-up': (context) => const SignUpScreen(),
-      '/home': (context) => const HomeScreen(),
-      '/reset-password': (context) => const ResetPasswordScreen(),
-      '/settings': (context) => const SettingsScreen(),
-      '/courses': (context) => const CourseScreen(),
-      '/chapter': (context) {
-        final args =
-            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return ChapterScreen(courseId: args['courseId']);
-      },
-      '/lessons': (context) {
-        final args =
-            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return LessonScreen(
-          languageId: args['languageId'] as int,
-          chapterNumber: args['chapterNumber'] as int,
+  Route<dynamic>? _generateRoute(RouteSettings settings) {
+    // Handle deep linking here by parsing the settings.name
+
+    // Normal route handling
+    switch (settings.name) {
+      case '/login':
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+      case '/sign-up':
+        return MaterialPageRoute(builder: (_) => const SignUpScreen());
+      case '/home':
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case '/reset-password':
+        return MaterialPageRoute(builder: (_) => const ResetPasswordScreen());
+      case '/settings':
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case '/courses':
+        return MaterialPageRoute(builder: (_) => const CourseScreen());
+      case '/chapter':
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null || !args.containsKey('courseId')) {
+          return MaterialPageRoute(
+            builder: (_) => const ErrorScreen(
+              errorMessage: 'Invalid course data',
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => ChapterScreen(courseId: args['courseId']),
         );
-      },
-      '/view-lesson': (context) {
-        final args =
-            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return ViewLessonScreen(lessonId: args['lessonId']);
-      },
-      '/quiz-details': (context) {
-        final args =
-            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return QuizDetailsScreen(lessonId: args['lessonId']);
-      },
-      '/quiz-submission': (context) {
-        final args =
-            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return QuizSubmissionScreen(
-          quizId: args['quizId'],
-          questions: List<Map<String, dynamic>>.from(args['questions']),
+      case '/lessons':
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null ||
+            !args.containsKey('languageId') ||
+            !args.containsKey('chapterNumber')) {
+          return MaterialPageRoute(
+            builder: (_) => const ErrorScreen(
+              errorMessage: 'Invalid lesson data',
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => LessonScreen(
+            languageId: args['languageId'] as int,
+            chapterNumber: args['chapterNumber'] as int,
+          ),
         );
-      },
-      '/quizResult': (context) {
-        final args =
-            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return QuizResultScreen(
-          quizId: args['quizId'],
-          token: args['token'],
-          numberOfQuestions: args['numberOfQuestions'],
+      case '/view-lesson':
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null || !args.containsKey('lessonId')) {
+          return MaterialPageRoute(
+            builder: (_) => const ErrorScreen(
+              errorMessage: 'Invalid lesson ID',
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => ViewLessonScreen(lessonId: args['lessonId']),
         );
-      },
-      '/tags': (context) => const TagsScreen(),
-      '/problems': (context) => ProblemScreen(
-          tagId: ModalRoute.of(context)!.settings.arguments as int),
-      '/problem_detail': (context) => const ProblemDetailScreen(),
-      '/ocr': (context) => const GeminiScreen(),
-    };
+      case '/quiz-details':
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null || !args.containsKey('lessonId')) {
+          return MaterialPageRoute(
+            builder: (_) => const ErrorScreen(
+              errorMessage: 'Invalid quiz data',
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => QuizDetailsScreen(lessonId: args['lessonId']),
+        );
+      case '/quiz-submission':
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null ||
+            !args.containsKey('quizId') ||
+            !args.containsKey('questions')) {
+          return MaterialPageRoute(
+            builder: (_) => const ErrorScreen(
+              errorMessage: 'Invalid quiz submission data',
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => QuizSubmissionScreen(
+            quizId: args['quizId'],
+            questions: List<Map<String, dynamic>>.from(args['questions']),
+            timeLimit: args['timeLimit'],
+          ),
+        );
+      case '/quizResult':
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null ||
+            !args.containsKey('quizId') ||
+            !args.containsKey('token')) {
+          return MaterialPageRoute(
+            builder: (_) => const ErrorScreen(
+              errorMessage: 'Invalid quiz result data',
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => QuizResultScreen(
+            quizId: args['quizId'],
+            token: args['token'],
+            numberOfQuestions: args['numberOfQuestions'],
+          ),
+        );
+      case '/tags':
+        return MaterialPageRoute(builder: (_) => const TagsScreen());
+      case '/problems':
+        final tagId = settings.arguments as int?;
+        if (tagId == null) {
+          return MaterialPageRoute(
+            builder: (_) => const ErrorScreen(
+              errorMessage: 'Invalid tag ID',
+            ),
+          );
+        }
+        return MaterialPageRoute(builder: (_) => ProblemScreen(tagId: tagId));
+      case '/problem_detail':
+        return MaterialPageRoute(builder: (_) => const ProblemDetailScreen());
+      case '/ocr':
+        return MaterialPageRoute(builder: (_) => const GeminiScreen());
+      default:
+        return null;
+    }
   }
 }
