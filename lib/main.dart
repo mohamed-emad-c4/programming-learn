@@ -9,6 +9,7 @@ import 'package:learn_programming/presentation/cubit/problem/problem/problem_cub
 import 'package:learn_programming/presentation/theme/app_theme.dart';
 import 'package:learn_programming/presentation/cubit/theme/theme_cubit.dart';
 import 'package:learn_programming/test.dart';
+import 'package:learn_programming/utils/auth_service.dart';
 // Remove the imports causing issues
 // import 'package:flutter_localizations/flutter_localizations.dart';
 // import 'package:device_preview/device_preview.dart';
@@ -82,6 +83,10 @@ void main() async {
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
+
+  // Initialize auth service
+  final authService = AuthService();
+  await authService.init();
 
   await _setupDependencies(prefs);
 

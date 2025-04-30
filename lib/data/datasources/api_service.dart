@@ -110,8 +110,85 @@ class ApiService {
     }
   }
 
-  static Future<http.Response> submitQuiz(
+  Future<Map<String, dynamic>> submitQuiz(
+      {required int quizId,
+      required List<Map<String, dynamic>> answers,
+      String? token}) async {
+    final url = Uri.parse('$baseUrl/quizzes/$quizId/submit');
+    try {
+      log('Submitting quiz to $url');
+
+      // Ensure each answer has correct format
+      final validatedAnswers = answers
+          .map((answer) => {
+                "question_id": answer["question_id"],
+                "selected_option": answer["selected_option"],
+              })
+          .toList();
+
+      log('Formatted answers: $validatedAnswers');
+
+      final headers = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add token if available
+      if (token != null && token.isNotEmpty) {
+        log('Using token for submission: $token');
+        headers['Authorization'] = 'Bearer $token';
+      } else {
+        log('No token available for submission');
+      }
+
+      // Build the correct JSON structure
+      final requestBody = jsonEncode({"answers": validatedAnswers});
+
+      log('Request body: $requestBody');
+
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: requestBody,
+      );
+
+      log('Quiz submission response code: ${response.statusCode}');
+      log('Quiz submission response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonResponse = jsonDecode(response.body);
+        return {
+          'success': true,
+          'message': 'Quiz submitted successfully',
+          'data': jsonResponse,
+          'submission_token': jsonResponse['token'] ?? token,
+        };
+      } else if (response.statusCode == 401) {
+        return {
+          'success': false,
+          'message': 'Authentication failed. Please log in again.',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to submit quiz: ${response.statusCode}',
+          'error': response.body,
+        };
+      }
+    } catch (e, stackTrace) {
+      log('Error submitting quiz: $e');
+      log(stackTrace.toString());
+      return {
+        'success': false,
+        'message': 'Exception occurred: $e',
+      };
+    }
+  }
+
+  // Deprecated method - keeping for backward compatibility
+  @Deprecated('Use instance method submitQuiz instead')
+  static Future<http.Response> submitQuizStatic(
       int quizId, List<Map<String, dynamic>> answers, String token) async {
+    log('Warning: Using deprecated static submitQuiz method');
     final url = Uri.parse('$baseUrl/quizzes/$quizId/submit');
     return await http.post(
       url,

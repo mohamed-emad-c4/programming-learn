@@ -47,6 +47,7 @@ class AuthCubit extends Cubit<AuthState> {
         password: password,
       );
       log('Token after login: $token'); // طباعة الـ token
+      
       emit(AuthSuccess(token: token)); // إرسال الـ token مع الحالة
     } catch (e) {
       emit(AuthFailure(error: e.toString()));

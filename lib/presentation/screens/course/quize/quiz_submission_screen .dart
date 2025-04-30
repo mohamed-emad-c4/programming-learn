@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get_it/get_it.dart';
 import '../../../../data/datasources/api_service.dart';
 import '../../../../domain/repositories/auth_repository_impl.dart';
+import '../../../../utils/auth_service.dart';
 import '../../../cubit/quiz/quiz_submission_cubit.dart';
 
 class QuizSubmissionScreen extends StatefulWidget {
@@ -50,9 +53,83 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
       duration: const Duration(milliseconds: 500),
     );
 
+    // Check authentication status
+    _checkAuthStatus();
+
     if (widget.timeLimit != null) {
       _remainingSeconds = widget.timeLimit! * 60;
       _startTimer();
+    }
+  }
+
+  /// Check if user is authenticated
+  Future<void> _checkAuthStatus() async {
+    final authService = AuthService();
+    final isAuthenticated = await authService.isAuthenticated();
+
+    if (!isAuthenticated && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white),
+              SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'You need to log in to submit quizzes',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          behavior: SnackBarBehavior.fixed,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Log In',
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  /// Load token from SharedPreferences if not already in GetIt
+  Future<void> _preloadToken() async {
+    const tokenKey = 'auth_token'; // Must match the key in the cubit
+
+    // Check if token is already in GetIt
+    if (GetIt.I.isRegistered<String>(instanceName: 'token')) {
+      log('Token already registered in GetIt');
+      return;
+    }
+
+    try {
+      // Try to load from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(tokenKey);
+
+      if (token != null && token.isNotEmpty) {
+        log('Found token in SharedPreferences, registering in GetIt');
+        GetIt.I.registerSingleton<String>(token, instanceName: 'token');
+      } else {
+        // Try to load from AuthRepository as fallback
+        final authRepo = AuthRepositoryImpl();
+        final repoToken = await authRepo.getToken();
+
+        if (repoToken != null) {
+          log('Found token in AuthRepository, registering in GetIt');
+          GetIt.I.registerSingleton<String>(repoToken, instanceName: 'token');
+
+          // Save to SharedPreferences for future use
+          await prefs.setString(tokenKey, repoToken);
+        } else {
+          log('No token found in any storage');
+        }
+      }
+    } catch (e) {
+      log('Error preloading token: $e');
     }
   }
 
@@ -143,14 +220,98 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
       );
     }
 
+    // Convert to the expected format with specific question_id and selected_option fields
     final answers = _selectedAnswers.entries
         .map((entry) => {
               "question_id": entry.key,
               "selected_option": entry.value,
             })
         .toList();
-    log(answers.toString());
-    quizSubmissionCubit.submitQuiz(widget.quizId, answers);
+
+    log('Submitting answers: $answers');
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Submitting quiz...'),
+            ],
+          ),
+        ),
+      );
+
+      // Submit quiz
+      quizSubmissionCubit.submitQuiz(widget.quizId, answers).then((_) {
+        // Close loading dialog
+        if (context.mounted) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+      }).catchError((error) {
+        // Close loading dialog on error
+        if (context.mounted) {
+          Navigator.of(context, rootNavigator: true).pop();
+
+          // Handle auth error specifically
+          if (error.toString().toLowerCase().contains('auth')) {
+            _showLoginPrompt();
+          } else {
+            // Show generic error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Error: ${error.toString()}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Theme.of(context).colorScheme.error,
+                behavior: SnackBarBehavior.fixed,
+              ),
+            );
+          }
+        }
+      });
+    } catch (e) {
+      log('Error initiating quiz submission: $e');
+    }
+  }
+
+  /// Show login prompt when authentication fails
+  void _showLoginPrompt() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Authentication Required'),
+        content: const Text(
+            'You need to log in to submit quizzes. Would you like to log in now?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+            child: const Text('Log In'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
