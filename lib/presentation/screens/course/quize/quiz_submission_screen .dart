@@ -29,7 +29,7 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
   final Set<int> _bookmarkedQuestions = {};
   late QuizSubmissionCubit quizSubmissionCubit;
   late AnimationController _fadeController;
-  late Timer? _timer;
+  Timer? _timer;
   int _remainingSeconds = 0;
   final PageController _pageController = PageController();
   int _currentPage = 0;
@@ -81,12 +81,17 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
           children: [
             Icon(Icons.timer, color: Colors.white),
             SizedBox(width: 8),
-            Text('5 minutes remaining!'),
+            Flexible(
+              child: Text(
+                '5 minutes remaining!',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         backgroundColor: Theme.of(context).colorScheme.error,
         duration: const Duration(seconds: 5),
-        behavior: SnackBarBehavior.floating,
+        behavior: SnackBarBehavior.fixed,
       ),
     );
   }
@@ -118,10 +123,22 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
 
   void submitAnswers({bool autoSubmit = false}) {
     if (autoSubmit) {
+      log('autoSubmit');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Time\'s up! Quiz submitted automatically.'),
-          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              Icon(Icons.timer_off, color: Colors.white),
+              SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Time\'s up! Quiz submitted automatically.',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          behavior: SnackBarBehavior.fixed,
         ),
       );
     }
@@ -174,11 +191,16 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
                         Icon(Icons.check_circle,
                             color: theme.colorScheme.onPrimary),
                         const SizedBox(width: 8),
-                        const Text('Quiz submitted successfully!'),
+                        const Flexible(
+                          child: Text(
+                            'Quiz submitted successfully!',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                     backgroundColor: theme.colorScheme.primary,
-                    behavior: SnackBarBehavior.floating,
+                    behavior: SnackBarBehavior.fixed,
                   ),
                 );
 
@@ -199,11 +221,16 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
                         Icon(Icons.error_outline,
                             color: theme.colorScheme.onError),
                         const SizedBox(width: 8),
-                        Text(state.message),
+                        Flexible(
+                          child: Text(
+                            state.message,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                     backgroundColor: theme.colorScheme.error,
-                    behavior: SnackBarBehavior.floating,
+                    behavior: SnackBarBehavior.fixed,
                   ),
                 );
               }
@@ -234,6 +261,7 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
                 children: [
                   if (_currentPage < widget.questions.length)
                     FloatingActionButton.small(
+                      heroTag: 'bookmark_fab_quiz_submission',
                       onPressed: () {
                         setState(() {
                           final questionId =
@@ -254,6 +282,7 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
                     ).animate().scale(delay: 200.ms),
                   const SizedBox(height: 8),
                   FloatingActionButton.extended(
+                    heroTag: 'submit_fab_quiz_submission',
                     onPressed: _showSubmitConfirmation,
                     icon: const Icon(Icons.check_circle_outline),
                     label: const Text('Submit Quiz'),
@@ -332,15 +361,25 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Question ${_currentPage + 1} of ${widget.questions.length}',
-                style: theme.textTheme.bodyMedium,
+              Flexible(
+                flex: 3,
+                child: Text(
+                  'Question ${_currentPage + 1} of ${widget.questions.length}',
+                  style: theme.textTheme.bodyMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              Text(
-                '${(progress * 100).toInt()}% Complete',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w500,
+              const SizedBox(width: 8),
+              Flexible(
+                flex: 2,
+                child: Text(
+                  '${(progress * 100).toInt()}% Complete',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
                 ),
               ),
             ],
@@ -552,15 +591,19 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
             Icons.timer_outlined,
             color:
                 isLowTime ? theme.colorScheme.error : theme.colorScheme.primary,
+            size: 20,
           ),
           const SizedBox(width: 8),
-          Text(
-            'Time Remaining: ${_formatTime(_remainingSeconds)}',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: isLowTime
-                  ? theme.colorScheme.error
-                  : theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
+          Flexible(
+            child: Text(
+              'Time Remaining: ${_formatTime(_remainingSeconds)}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: isLowTime
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -652,6 +695,7 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -673,12 +717,16 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Questions Overview',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Flexible(
+                  child: Text(
+                    'Questions Overview',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () {
                     final bookmarkedIndex = widget.questions.indexWhere(
@@ -693,8 +741,14 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
                       );
                     }
                   },
-                  icon: const Icon(Icons.bookmark),
-                  label: const Text('Go to Bookmarked'),
+                  icon: const Icon(Icons.bookmark, size: 18),
+                  label: const Text(
+                    'Bookmarked',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
                 ),
               ],
             ),

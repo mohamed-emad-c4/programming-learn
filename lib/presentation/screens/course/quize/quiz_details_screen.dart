@@ -47,27 +47,29 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
     return BlocProvider(
       create: (context) =>
           QuizDetailsCubit(ApiService())..fetchQuizzes(widget.lessonId),
-      child: Scaffold(
-        body: NestedScrollView(
-          controller: _scrollController,
-          headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            _buildAppBar(context),
-          ],
-          body: BlocBuilder<QuizDetailsCubit, QuizDetailsState>(
-            builder: (context, state) {
-              if (state is QuizDetailsLoading) {
-                return _buildLoadingState();
-              } else if (state is QuizDetailsError) {
-                return _buildErrorState(state.message);
-              } else if (state is QuizDetailsLoaded) {
-                return _buildContent(state.quizzes);
-              }
-              return _buildEmptyState();
-            },
+      child: Builder(
+        builder: (context) => Scaffold(
+          body: NestedScrollView(
+            controller: _scrollController,
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              _buildAppBar(context),
+            ],
+            body: BlocBuilder<QuizDetailsCubit, QuizDetailsState>(
+              builder: (context, state) {
+                if (state is QuizDetailsLoading) {
+                  return _buildLoadingState();
+                } else if (state is QuizDetailsError) {
+                  return _buildErrorState(state.message);
+                } else if (state is QuizDetailsLoaded) {
+                  return _buildContent(state.quizzes);
+                }
+                return _buildEmptyState();
+              },
+            ),
           ),
+          floatingActionButton:
+              _showFloatingButton ? _buildFloatingActionButton(context) : null,
         ),
-        floatingActionButton:
-            _showFloatingButton ? _buildFloatingActionButton() : null,
       ),
     );
   }
@@ -260,7 +262,7 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
     );
   }
 
-  Widget _buildFloatingActionButton() {
+  Widget _buildFloatingActionButton(BuildContext context) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -289,7 +291,24 @@ class _QuizDetailsScreenState extends State<QuizDetailsScreen> {
           FloatingActionButton.extended(
             heroTag: 'main_fab_quiz_details',
             onPressed: () {
-              // TODO: Implement quick navigation or lesson filtering
+              final state = BlocProvider.of<QuizDetailsCubit>(context).state;
+              if (state is QuizDetailsLoaded) {
+                final quizzes = state.quizzes;
+                if (quizzes.isNotEmpty) {
+                  // Navigate to the first quiz by default, can be modified to handle selected quiz
+                  final selectedQuiz = quizzes[0];
+                  Navigator.pushNamed(
+                    context,
+                    '/quiz-submission',
+                    arguments: {
+                      'quizId': selectedQuiz['id'],
+                      'questions': List<Map<String, dynamic>>.from(
+                          selectedQuiz['questions']),
+                      'timeLimit': selectedQuiz['time_limit'],
+                    },
+                  );
+                }
+              }
             },
             icon: Icon(_getFloatingActionButtonIcon()),
             label: Text(_getFloatingActionButtonLabel()),
