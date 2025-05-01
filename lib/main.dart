@@ -1,4 +1,5 @@
 // lib/main.dart
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -116,15 +117,59 @@ Future<void> _setupDependencies(SharedPreferences prefs) async {
   GetIt.I.registerFactory(() => ProblemCubit(GetIt.I<ApiService>()));
   GetIt.I.registerFactory(() => ImageCubit());
 
-  // Check Token
-  final token = await authRepository.getToken();
-  if (token != null) {
-    final isValid = await authRepository.validateToken(token);
-    if (isValid) {
-      GetIt.I.registerSingleton<String>(token, instanceName: 'token');
-    } else {
-      await authRepository.clearToken(); // Clear invalid token
+  // Check for token in all possible storage locations
+  await _registerTokenFromAllSources(authRepository);
+}
+
+/// Attempts to register token from any available source
+Future<void> _registerTokenFromAllSources(AuthRepository authRepository) async {
+  log('Checking for token in all storage locations');
+
+  // Try to unregister first to prevent conflicts
+  if (GetIt.I.isRegistered<String>(instanceName: 'token')) {
+    try {
+      GetIt.I.unregister<String>(instanceName: 'token');
+      log('Unregistered existing token');
+    } catch (e) {
+      log('Error unregistering token: $e');
     }
+  }
+
+  // Check multiple sources in order of preference
+
+  // Source 1: Auth repository
+  String? token = await authRepository.getToken();
+
+  // Source 2: Check direct in SharedPreferences
+  if (token == null || token.isEmpty) {
+    final prefs = GetIt.I<SharedPreferences>();
+    token = prefs.getString('access_token') ?? prefs.getString('auth_token');
+
+    if (token != null && token.isNotEmpty) {
+      log('Token found in SharedPreferences');
+      // Save to repository for consistency
+      await authRepository.saveToken(token);
+    }
+  }
+
+  // Register if we found a valid token
+  if (token != null && token.isNotEmpty) {
+    try {
+      GetIt.I.registerSingleton<String>(token, instanceName: 'token');
+      log('Token registered in GetIt: ${token.substring(0, token.length > 10 ? 10 : token.length)}...');
+
+      // Validate token
+      final isValid = await authRepository.validateToken(token);
+      if (!isValid) {
+        log('Token is invalid, clearing token');
+        await authRepository.clearToken();
+        GetIt.I.unregister<String>(instanceName: 'token');
+      }
+    } catch (e) {
+      log('Error registering token: $e');
+    }
+  } else {
+    log('No valid token found in any storage');
   }
 }
 
@@ -269,11 +314,9 @@ class MyApp extends StatelessWidget {
             timeLimit: args['timeLimit'],
           ),
         );
-      case '/quizResult':
+      case '/quiz_result':
         final args = settings.arguments as Map<String, dynamic>?;
-        if (args == null ||
-            !args.containsKey('quizId') ||
-            !args.containsKey('token')) {
+        if (args == null || !args.containsKey('quizId')) {
           return MaterialPageRoute(
             builder: (_) => const ErrorScreen(
               errorMessage: 'Invalid quiz result data',
@@ -284,7 +327,8 @@ class MyApp extends StatelessWidget {
           builder: (_) => QuizResultScreen(
             quizId: args['quizId'],
             token: args['token'],
-            numberOfQuestions: args['numberOfQuestions'],
+            numberOfQuestions: args['numberOfQuestions'] ?? 10,
+            data: args['data'],
           ),
         );
       case '/tags':

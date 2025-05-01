@@ -11,7 +11,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   AuthCubit(this.authRepository) : super(AuthInitial());
 
- Future<void> register({
+  Future<void> register({
     required String name,
     required String nickname,
     required String country,
@@ -29,12 +29,11 @@ class AuthCubit extends Cubit<AuthState> {
         password: password,
         role: role,
       );
-      emit(AuthSuccess());
+      emit(const AuthSuccess());
     } catch (e) {
       emit(AuthFailure(error: e.toString()));
     }
   }
-
 
   Future<void> login({
     required String username,
@@ -42,35 +41,55 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
+      log('AuthCubit: Attempting login for username: $username');
       final token = await authRepository.login(
         username: username,
         password: password,
       );
-      log('Token after login: $token'); // طباعة الـ token
-      
+      log('AuthCubit: Token after login: $token'); // طباعة الـ token
+
       emit(AuthSuccess(token: token)); // إرسال الـ token مع الحالة
     } catch (e) {
-      emit(AuthFailure(error: e.toString()));
+      log('AuthCubit: Login error: $e');
+
+      // Check for specific network errors
+      final errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('connection refused') ||
+          errorStr.contains('network is unreachable') ||
+          errorStr.contains('failed host lookup') ||
+          errorStr.contains('socket') ||
+          errorStr.contains('connection failed')) {
+        emit(const AuthFailure(
+            error:
+                'Cannot connect to the server. Please check your internet connection and try again.'));
+      } else if (errorStr.contains('timeout')) {
+        emit(const AuthFailure(
+            error:
+                'Connection timeout. Please check your internet connection.'));
+      } else if (errorStr.contains('unauthorized') ||
+          errorStr.contains('401')) {
+        emit(const AuthFailure(
+            error: 'Login failed: Invalid username or password.'));
+      } else {
+        emit(AuthFailure(error: e.toString()));
+      }
     }
   }
- Future<void> logout() async {
+
+  Future<void> logout() async {
     emit(AuthInitial()); // إعادة الحالة إلى الحالة الأولية
   }
+
 // lib/presentation/cubit/auth_cubit.dart
 // lib/presentation/cubit/auth_cubit.dart
-Future<void> checkTokenValidity() async {
-  final token = await authRepository.getToken();
-  if (token != null) {
-    final isValid = await authRepository.validateToken(token);
-    if (!isValid) {
-      await authRepository.clearToken();
-      emit(AuthInitial()); // إعادة التوجيه إلى شاشة تسجيل الدخول
+  Future<void> checkTokenValidity() async {
+    final token = await authRepository.getToken();
+    if (token != null) {
+      final isValid = await authRepository.validateToken(token);
+      if (!isValid) {
+        await authRepository.clearToken();
+        emit(AuthInitial()); // إعادة التوجيه إلى شاشة تسجيل الدخول
+      }
     }
   }
-}
-
-
-
-
-
 }

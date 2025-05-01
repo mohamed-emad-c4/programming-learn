@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'dart:developer' as dev;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -101,7 +101,7 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
 
     // Check if token is already in GetIt
     if (GetIt.I.isRegistered<String>(instanceName: 'token')) {
-      log('Token already registered in GetIt');
+      dev.log('Token already registered in GetIt');
       return;
     }
 
@@ -111,7 +111,7 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
       final token = prefs.getString(tokenKey);
 
       if (token != null && token.isNotEmpty) {
-        log('Found token in SharedPreferences, registering in GetIt');
+        dev.log('Found token in SharedPreferences, registering in GetIt');
         GetIt.I.registerSingleton<String>(token, instanceName: 'token');
       } else {
         // Try to load from AuthRepository as fallback
@@ -119,17 +119,17 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
         final repoToken = await authRepo.getToken();
 
         if (repoToken != null) {
-          log('Found token in AuthRepository, registering in GetIt');
+          dev.log('Found token in AuthRepository, registering in GetIt');
           GetIt.I.registerSingleton<String>(repoToken, instanceName: 'token');
 
           // Save to SharedPreferences for future use
           await prefs.setString(tokenKey, repoToken);
         } else {
-          log('No token found in any storage');
+          dev.log('No token found in any storage');
         }
       }
     } catch (e) {
-      log('Error preloading token: $e');
+      dev.log('Error preloading token: $e');
     }
   }
 
@@ -200,7 +200,7 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
 
   void submitAnswers({bool autoSubmit = false}) {
     if (autoSubmit) {
-      log('autoSubmit');
+      dev.log('autoSubmit');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Row(
@@ -228,90 +228,144 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
             })
         .toList();
 
-    log('Submitting answers: $answers');
+    dev.log('Submitting answers: $answers');
 
     try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Submitting quiz...'),
-            ],
+      // Ensure auth service is initialized and token is preloaded before submission
+      _preloadToken().then((_) {
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Submitting quiz...'),
+              ],
+            ),
           ),
-        ),
-      );
+        );
 
-      // Submit quiz
-      quizSubmissionCubit.submitQuiz(widget.quizId, answers).then((_) {
-        // Close loading dialog
-        if (context.mounted) {
-          Navigator.of(context, rootNavigator: true).pop();
-        }
-      }).catchError((error) {
-        // Close loading dialog on error
-        if (context.mounted) {
-          Navigator.of(context, rootNavigator: true).pop();
-
-          // Handle auth error specifically
-          if (error.toString().toLowerCase().contains('auth')) {
-            _showLoginPrompt();
-          } else {
-            // Show generic error message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.white),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Error: ${error.toString()}',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: Theme.of(context).colorScheme.error,
-                behavior: SnackBarBehavior.fixed,
-              ),
-            );
-          }
-        }
+        // Submit quiz
+        quizSubmissionCubit.submitQuiz(widget.quizId, answers);
       });
     } catch (e) {
-      log('Error initiating quiz submission: $e');
+      dev.log('Error during quiz submission: $e');
+      Navigator.of(context).pop(); // Close loading dialog
+      _showErrorSnackBar(
+        'An error occurred. Please try again.',
+        isAuthError: e.toString().toLowerCase().contains('auth') ||
+            e.toString().toLowerCase().contains('token'),
+      );
     }
   }
 
-  /// Show login prompt when authentication fails
-  void _showLoginPrompt() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Authentication Required'),
-        content: const Text(
-            'You need to log in to submit quizzes. Would you like to log in now?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+  void _showErrorSnackBar(String message, {bool isAuthError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isAuthError ? Icons.lock : Icons.error_outline,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                message,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.fixed,
+        action: isAuthError
+            ? SnackBarAction(
+                label: 'Log In',
+                textColor: Colors.white,
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+              )
+            : null,
+      ),
+    );
+  }
+
+  /// Build error widget for authentication issues
+  Widget _buildAuthErrorWidget({
+    required String message,
+    required VoidCallback onLogin,
+    VoidCallback? onRetry,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.security,
+            size: 48,
+            color: Theme.of(context).colorScheme.onErrorContainer,
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-            child: const Text('Log In'),
+          const SizedBox(height: 16),
+          Text(
+            'Authentication Error',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (onRetry != null) ...[
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                  onPressed: onRetry,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              ElevatedButton.icon(
+                icon: const Icon(Icons.login),
+                label: const Text('Log In'),
+                onPressed: onLogin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ],
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: const Duration(milliseconds: 400)).slideY(
+        begin: 0.2, end: 0, duration: const Duration(milliseconds: 400));
   }
 
   @override
@@ -344,43 +398,19 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
           create: (context) => quizSubmissionCubit,
           child: BlocListener<QuizSubmissionCubit, QuizSubmissionState>(
             listener: (context, state) {
-              if (state is QuizSubmissionSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        Icon(Icons.check_circle,
-                            color: theme.colorScheme.onPrimary),
-                        const SizedBox(width: 8),
-                        const Flexible(
-                          child: Text(
-                            'Quiz submitted successfully!',
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    backgroundColor: theme.colorScheme.primary,
-                    behavior: SnackBarBehavior.fixed,
-                  ),
-                );
+              // Close loading dialog
+              if (Navigator.of(context).canPop() &&
+                  ModalRoute.of(context)?.settings.name != '/login') {
+                Navigator.of(context).pop();
+              }
 
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/quizResult',
-                  arguments: {
-                    'quizId': widget.quizId,
-                    "numberOfQuestions": widget.questions.length,
-                    'token': quizSubmissionCubit.token,
-                  },
-                );
-              } else if (state is QuizSubmissionError) {
+              if (state is QuizSubmissionSuccess) {
+                // Show success message
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Row(
                       children: [
-                        Icon(Icons.error_outline,
-                            color: theme.colorScheme.onError),
+                        const Icon(Icons.check_circle, color: Colors.white),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
@@ -390,10 +420,49 @@ class _QuizSubmissionScreenState extends State<QuizSubmissionScreen>
                         ),
                       ],
                     ),
-                    backgroundColor: theme.colorScheme.error,
+                    backgroundColor: Colors.green,
                     behavior: SnackBarBehavior.fixed,
                   ),
                 );
+
+                // Return to quiz list with results
+                Navigator.of(context).pushReplacementNamed(
+                  '/quiz_result',
+                  arguments: {
+                    'quizId': widget.quizId,
+                    'data': state.data,
+                    'token': quizSubmissionCubit.token,
+                    'numberOfQuestions': widget.questions.length,
+                  },
+                );
+              } else if (state is QuizSubmissionError) {
+                // Show error dialog instead of just a snackbar
+                if (state.isAuthError) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      contentPadding: EdgeInsets.zero,
+                      content: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: _buildAuthErrorWidget(
+                          message: state.message,
+                          onLogin: () {
+                            Navigator.of(context).pop();
+                            Navigator.pushReplacementNamed(context, '/login');
+                          },
+                          onRetry: () {
+                            Navigator.of(context).pop();
+                            submitAnswers();
+                          },
+                        ),
+                      ),
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                    ),
+                  );
+                } else {
+                  _showErrorSnackBar(state.message);
+                }
               }
             },
             child: Column(
